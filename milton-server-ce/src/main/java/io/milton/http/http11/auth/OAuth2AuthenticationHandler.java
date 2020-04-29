@@ -20,7 +20,6 @@ import io.milton.http.Auth.Scheme;
 import io.milton.http.AuthenticationHandler;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
-import io.milton.http.values.Pair;
 import io.milton.resource.OAuth2Provider;
 import io.milton.resource.OAuth2Resource;
 import io.milton.resource.OAuth2Resource.OAuth2ProfileDetails;
@@ -170,9 +169,9 @@ public class OAuth2AuthenticationHandler implements AuthenticationHandler {
 		if (StringUtils.isNotBlank(oAuth2Code) && StringUtils.isBlank(oAuth2Error)) {
 			// Find the provider, by looking for the provider id we put intop the redirect uri
 			String state = request.getParams().get(OAuth.OAUTH_STATE);
-			Pair<String, String> statePair = OAuth2Helper.parseState(state);
-			String provId = statePair.getObject1();
-			String returnUrl = statePair.getObject2();
+			oAuth2State oauth2State = OAuth2Helper.parseState(state);
+			String provId = oauth2State.getProviderId();
+			String returnUrl = oauth2State.getReturnUrl();
 			if (StringUtils.isBlank(provId)) {
 				log.warn("Could not authenticate oauth2 response because there is no provider ID parameter in the state parameter");
 				return null;

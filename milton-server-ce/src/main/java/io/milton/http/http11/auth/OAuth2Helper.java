@@ -19,11 +19,13 @@ import io.milton.common.Utils;
 import io.milton.http.OAuth2TokenResponse;
 import io.milton.http.Request;
 import io.milton.http.exceptions.BadRequestException;
-import io.milton.http.values.Pair;
 import io.milton.resource.OAuth2Provider;
 import io.milton.resource.OAuth2Resource.OAuth2ProfileDetails;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -51,13 +53,17 @@ public class OAuth2Helper {
 	private static final Logger log = LoggerFactory.getLogger(OAuth2Helper.class);
 
 	public static URL getOAuth2URL(OAuth2Provider provider, String returnUrl) {
+		return getOAuth2URL(provider, returnUrl, null);
+	}
+
+	public static URL getOAuth2URL(OAuth2Provider provider, String returnUrl, Map<String, String> extraStateParameters) {
 		log.trace("getOAuth2URL {}", provider);
 
 		String oAuth2Location = provider.getAuthLocation();
 		String oAuth2ClientId = provider.getClientId();
 		String scopes = Utils.toCsv(provider.getPermissionScopes(), false);
 		try {
-			String state = toState(provider.getProviderId(), returnUrl);
+			String state = toState(provider.getProviderId(), returnUrl, extraStateParameters);
 			OAuthClientRequest oAuthRequest = OAuthClientRequest
 					.authorizationLocation(oAuth2Location)
 					.setClientId(oAuth2ClientId)
@@ -73,33 +79,80 @@ public class OAuth2Helper {
 		} catch (MalformedURLException malformedURLException) {
 			throw new RuntimeException(malformedURLException);
 		}
-
 	}
 
 	public static String toState(String providerId, String returnUrl) {
+		return toState(providerId, returnUrl, null);
+	}
+
+	public static String toState(String providerId, String returnUrl, Map<String, String> extraStateParameters) {
 		StringBuilder sb = new StringBuilder(providerId);
 		if (returnUrl != null) {
 			sb.append("||");
 			sb.append(returnUrl);
 		}
+
+		if (extraStateParameters != null && !extraStateParameters.isEmpty()) {
+			final List<String> extraParams = new ArrayList();
+			extraStateParameters.forEach((String k, String v) -> {
+				extraParams.add(StringUtils.trimToEmpty(k) + "=" + StringUtils.trimToEmpty(v));
+			});
+
+			if (!extraParams.isEmpty()) {
+				sb.append(StringUtils.join(extraParams, "||"));
+			}
+		}
+
 		byte[] arr = Base64.encode(sb.toString().getBytes());
 		String encoded = new String(arr);
 		return encoded;
 	}
 
-	public static Pair<String, String> parseState(String encoded) {
+	public static oAuth2State parseState(String encoded) {
 		String decoded = new String(Base64.decode(encoded));
-		int i = decoded.indexOf("||");
-		String p;
-		String r;
-		if (i > 0) {
-			p = decoded.substring(0, i);
-			r = decoded.substring(i + 2);
-		} else {
-			p = decoded;
-			r = null;
+		String[] paramParts = StringUtils.split(decoded, "||");
+
+		String p = null;
+		String r = null;
+		Map<String, String> extraParams = new HashMap();
+
+		if (paramParts != null) {
+			// Parse providerId
+			if (paramParts.length >= 1) {
+				p = paramParts[0];
+			}
+
+			// Parse returnUrl
+			if (paramParts.length >= 2) {
+				r = paramParts[1];
+			}
+
+			// Parse extraParams
+			if (paramParts.length >= 3) {
+				for (int ppi = 2; ppi < paramParts.length; ppi++) {
+					String extraParam = paramParts[ppi];
+
+					String k = null;
+					String v = null;
+
+					String[] extraParamPart = StringUtils.split(extraParam, "=");
+					if (extraParamPart != null) {
+						if (extraParamPart.length >= 1) {
+							k = StringUtils.trimToNull(extraParamPart[0]);
+						}
+						if (extraParamPart.length >= 2) {
+							v = StringUtils.trimToEmpty(extraParamPart[1]);
+						}
+					}
+
+					if (StringUtils.isNotBlank(k)) {
+						extraParams.put(k, v);
+					}
+				}
+			}
 		}
-		return new Pair<String, String>(p, r);
+
+		return new oAuth2State(p, r, extraParams);
 	}
 
 	private final NonceProvider nonceProvider;
