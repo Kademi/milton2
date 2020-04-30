@@ -170,6 +170,11 @@ public class OAuth2AuthenticationHandler implements AuthenticationHandler {
 			// Find the provider, by looking for the provider id we put intop the redirect uri
 			String state = request.getParams().get(OAuth.OAUTH_STATE);
 			oAuth2State oauth2State = OAuth2Helper.parseState(state);
+			
+			if (oauth2State != null) {
+				request.getAttributes().put("oAuth2State", oauth2State);
+			}
+
 			String provId = oauth2State.getProviderId();
 			String returnUrl = oauth2State.getReturnUrl();
 			if (StringUtils.isBlank(provId)) {

@@ -95,11 +95,13 @@ public class OAuth2Helper {
 		if (extraStateParameters != null && !extraStateParameters.isEmpty()) {
 			final List<String> extraParams = new ArrayList();
 			extraStateParameters.forEach((String k, String v) -> {
-				extraParams.add(StringUtils.trimToEmpty(k) + "=" + StringUtils.trimToEmpty(v));
+				String key = Utils.encodeUrl(StringUtils.trimToEmpty(k));
+				String value = Utils.encodeUrl(StringUtils.trimToEmpty(v));
+				extraParams.add(key + "=" + value);
 			});
 
 			if (!extraParams.isEmpty()) {
-				sb.append(StringUtils.join(extraParams, "||"));
+				sb.append("||").append(StringUtils.join(extraParams, "||"));
 			}
 		}
 
@@ -139,9 +141,13 @@ public class OAuth2Helper {
 					if (extraParamPart != null) {
 						if (extraParamPart.length >= 1) {
 							k = StringUtils.trimToNull(extraParamPart[0]);
+							if (k != null) {
+								k = Utils.decodeUrl(k);
+							}
 						}
 						if (extraParamPart.length >= 2) {
 							v = StringUtils.trimToEmpty(extraParamPart[1]);
+							v = Utils.decodeUrl(v);
 						}
 					}
 

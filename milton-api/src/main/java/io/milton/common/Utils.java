@@ -18,14 +18,16 @@
  */
     package io.milton.common;
 
-import io.milton.resource.CollectionResource;
-import io.milton.resource.Resource;
 import io.milton.http.exceptions.BadRequestException;
 import io.milton.http.exceptions.NotAuthorizedException;
-
 import io.milton.http.webdav.Dest;
+import io.milton.resource.CollectionResource;
+import io.milton.resource.Resource;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -71,6 +73,22 @@ public class Utils {
             }
         } catch (URISyntaxException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+    
+    public static String encodeUrl(String url) {
+        try {
+            return URLEncoder.encode(url, UTF8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+    }
+
+    public static String decodeUrl(String url) {
+        try {
+            return URLDecoder.decode(url, UTF8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
         }
     }
 
