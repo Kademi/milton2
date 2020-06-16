@@ -21,7 +21,6 @@ package io.milton.mail;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 public class MailboxAddress implements Serializable{
@@ -101,7 +100,7 @@ public class MailboxAddress implements Serializable{
         return add;
 
     }
-    
+
     public InternetAddress toInternetAddress() {
         InternetAddress add = new InternetAddress();
         try {
@@ -111,7 +110,7 @@ public class MailboxAddress implements Serializable{
         }
         add.setAddress(user + "@" + domain);
         return add;
-        
+
 //        try {
 //            if( personal == null ) {
 //                return  new InternetAddress(user + "@" + domain);
@@ -142,7 +141,7 @@ public class MailboxAddress implements Serializable{
     /**
      * Returns a representative name for this address. This is the personal
      * portion if present, otherwise it is the user portion.
-     * 
+     *
      * @return
      */
     public String getDisplayName() {
@@ -152,5 +151,5 @@ public class MailboxAddress implements Serializable{
             return user;
         }
     }
-    
+
 }
