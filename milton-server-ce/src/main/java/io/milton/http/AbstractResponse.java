@@ -91,7 +91,7 @@ public abstract class AbstractResponse implements Response {
         if (delta != null) {
             setResponseHeader(Header.CACHE_CONTROL, "public, " + CacheControlResponse.MAX_AGE.code + "=" + delta);
         } else {
-            setResponseHeader(Header.CACHE_CONTROL, CacheControlResponse.NO_CACHE.code);
+            setResponseHeader(Header.CACHE_CONTROL, CacheControlResponse.NO_CACHE.code + "," + CacheControlResponse.NO_STORE.code);
         }
     }
 
@@ -125,7 +125,7 @@ public abstract class AbstractResponse implements Response {
 
 	@Override
     public void setCacheControlNoCacheHeader() {
-        setResponseHeader(Header.CACHE_CONTROL, CacheControlResponse.NO_CACHE.code);
+        setResponseHeader(Header.CACHE_CONTROL, CacheControlResponse.NO_CACHE.code + "," + CacheControlResponse.NO_STORE.code);
     }
 
 	@Override
@@ -207,7 +207,7 @@ public abstract class AbstractResponse implements Response {
         setStatus(Response.Status.SC_MOVED_TEMPORARILY);
         setLocationHeader(url);
     }
-	
+
 	@Override
 	public void sendPermanentRedirect(String url){
 		if (log.isTraceEnabled()) {
