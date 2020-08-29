@@ -61,8 +61,8 @@ public class WebResourceFactory implements ResourceFactory, Initable {
 		this.config = null;
 		this.fileHome = fileHome;
 		log.info("init fileHome={}", fileHome.getAbsoluteFile());
-	}	
-	
+	}
+
 	@Override
 	public void init(Config config, HttpManager manager) {
 		this.config = config;
@@ -82,6 +82,13 @@ public class WebResourceFactory implements ResourceFactory, Initable {
 		String path = stripContext(url);
 		path = basePath + path;
 		path = path.trim();
+
+		// https://nvd.nist.gov/vuln/detail/CVE-2000-0920
+		if( path.contains("../") || path.contains("/..") ) {
+			log.error("getResource: Invalid path {}, attempt to use relative notation", path);
+			return null;
+		}
+
 		String realPath;
 		if (config != null) {
 			realPath = config.getServletContext().getRealPath(path);
@@ -89,12 +96,12 @@ public class WebResourceFactory implements ResourceFactory, Initable {
 			realPath = fileHome.getAbsolutePath() + path;
 		}
 		if (realPath != null) {
-			file = new File(realPath);			
+			file = new File(realPath);
 		} else {
 			file = null;
 		}
-		
-		
+
+
 		if ( config != null && ( file == null || !file.exists())) {
 			URL resource;
 			try {
