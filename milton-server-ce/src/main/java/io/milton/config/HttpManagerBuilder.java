@@ -369,7 +369,7 @@ public class HttpManagerBuilder {
 				if (cookieAuthenticationHandler == null) {
 					if (enableCookieAuth) {
 						if (cookieDelegateHandlers == null) {
-							cookieDelegateHandlers = new ArrayList<AuthenticationHandler>();
+							cookieDelegateHandlers = new ArrayList<>();
 							if (basicHandler != null) {
 								cookieDelegateHandlers.add(basicHandler);
 								authenticationHandlers.remove(basicHandler);
