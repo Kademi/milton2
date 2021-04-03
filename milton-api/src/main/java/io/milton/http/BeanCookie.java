@@ -53,6 +53,9 @@ public class BeanCookie implements Cookie {
         if (c.isHttpOnly()) {
             sb.append("; HttpOnly");
         }
+        if( c.getSameSite() != null ) {
+            sb.append("; SameSite=").append(c.getSameSite());
+        }
         return sb.toString();
     }
     private int version;
@@ -63,6 +66,7 @@ public class BeanCookie implements Cookie {
     private String domain;
     private String path;
     private boolean httpOnly;
+    private SameSite sameSite;
 
     public BeanCookie(String name) {
         this.name = name;
@@ -145,5 +149,15 @@ public class BeanCookie implements Cookie {
     @Override
     public boolean isHttpOnly() {
         return httpOnly;
+    }
+
+    @Override
+    public void setSameSite(SameSite ss) {
+        this.sameSite = ss;
+    }
+
+    @Override
+    public SameSite getSameSite() {
+        return sameSite;
     }
 }

@@ -25,6 +25,12 @@ package io.milton.http;
  */
 public interface Cookie {
 
+    public enum SameSite {
+        None,
+        Lax,
+        Strict
+    }
+
 
    /**
     * This returns the version for this cookie. The version is
@@ -182,6 +188,15 @@ public interface Cookie {
    void setDomain(String domain);
 
    boolean isHttpOnly();
-   
+
    void setHttpOnly(boolean  b);
+
+   /**
+    * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+    *
+    * @param b
+    */
+   void setSameSite(SameSite ss);
+
+   public SameSite getSameSite();
 }

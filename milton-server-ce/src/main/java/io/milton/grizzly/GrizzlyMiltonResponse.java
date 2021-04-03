@@ -5,7 +5,6 @@ package io.milton.grizzly;
 import io.milton.http.AbstractResponse;
 import io.milton.http.BeanCookie;
 import io.milton.http.Cookie;
-import io.milton.servlet.ServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -23,19 +22,19 @@ import org.slf4j.LoggerFactory;
 public class GrizzlyMiltonResponse extends AbstractResponse {
 
     private static final Logger log = LoggerFactory.getLogger(GrizzlyMiltonResponse.class);
-    
+
     private final Response r;
-    private final Map<String, String> headers = new HashMap<String, String>();
+    private final Map<String, String> headers = new HashMap<>();
 
     public GrizzlyMiltonResponse(Response response) {
         this.r = response;
     }
-    
-    
-    
+
+
+
     @Override
     public Status getStatus() {
-        return Status.fromCode(r.getStatus()); 
+        return Status.fromCode(r.getStatus());
     }
 
     @Override
@@ -99,7 +98,7 @@ public class GrizzlyMiltonResponse extends AbstractResponse {
 	public Cookie setCookie(Cookie cookie) {
 		String h = BeanCookie.toHeader(cookie);
 		r.addHeader("Set-Cookie", h);
-		return cookie;		
+		return cookie;
 	}
 
 	@Override
@@ -110,5 +109,5 @@ public class GrizzlyMiltonResponse extends AbstractResponse {
 		setCookie(c);
 		return c;
 	}
-    
+
 }
