@@ -528,7 +528,8 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		c.setValue(encodedUserUrl);
 		c.setPath("/");
 		c.setVersion(1);
-		c.setSameSite(Cookie.SameSite.Strict);
+		//c.setSameSite(Cookie.SameSite.Strict);
+		c.setSameSite(Cookie.SameSite.Lax);
 		if (keepLoggedIn && useLongLivedCookies) {
 			c.setExpiry(SECONDS_PER_YEAR);
 		}
@@ -537,7 +538,8 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		c = new BeanCookie(cookieUserUrlHash);
 		c.setValue("\"" + hash + "\"");
 		c.setHttpOnly(true); // http only so not accessible from JS. Helps prevent XSS attacks
-		c.setSameSite(Cookie.SameSite.Strict);
+		//c.setSameSite(Cookie.SameSite.Strict);
+		c.setSameSite(Cookie.SameSite.Lax);
 		c.setVersion(1);
 		c.setPath("/");
 		if (keepLoggedIn && useLongLivedCookies) {
