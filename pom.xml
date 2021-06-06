@@ -10,18 +10,13 @@
 	<scm>
 		<connection>scm:git:git@github.com:miltonio/milton2.git</connection>
 	</scm>
-	<distributionManagement>
-		<repository>
-			<id>bintray-milton-Milton</id>
-			<name>milton-Milton</name>
-			<url>https://api.bintray.com/maven/kademi/Kademi/kademi/;publish=1</url>
-		</repository>
-		<snapshotRepository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>ettrema-repo</id>
-			<url>https://milton.io/maven/</url>
-		</snapshotRepository>
-	</distributionManagement>
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>a0glkgfeusb7f-artifactory-primary-0-releases</name>
+            <url>https://kademi.jfrog.io/artifactory/kademi-libs-release-local</url>
+        </repository>
+    </distributionManagement>
 	<developers>
 		<developer>
 			<name>Brad McEvoy</name>
@@ -166,6 +161,7 @@
 
 
 	<repositories>
+		<!--
         <repository>
             <id>central</id>
             <name>Central Repository</name>
@@ -187,6 +183,7 @@
 			<name>bintray</name>
 			<url>https://dl.bintray.com/milton/Milton</url>
 		</repository>
+-->
 		<!--
 				<repository>
 					<id>mvnrepository.com</id>
