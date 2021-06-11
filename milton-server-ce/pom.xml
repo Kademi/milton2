@@ -19,20 +19,20 @@
 			<comments>Permissive, business friendly license.</comments>
 		</license>
 	</licenses>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <profiles>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<profiles>
 		<profile>
 			<id>run-simpleton</id>
 			<dependencies>
@@ -147,13 +147,13 @@
 			<version>4.3</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.ftpserver/ftplet-api -->
 		<dependency>
 			<groupId>org.apache.ftpserver</groupId>
 			<artifactId>ftplet-api</artifactId>
-			<version>1.0.1</version>
-			<scope>compile</scope>
-			<type>jar</type>
+			<version>1.1.1</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.apache.mina</groupId>
 			<artifactId>mina-core</artifactId>
