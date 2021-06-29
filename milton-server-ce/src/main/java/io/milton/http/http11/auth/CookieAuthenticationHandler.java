@@ -392,11 +392,15 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		return signing;
 	}
 
-	private boolean verifyHash(String userUrl, Request request) {
+	public boolean verifyHash(String userUrl, Request request) {
 		String signing = getHashFromRequest(request);
 		if (signing == null) {
 			return false;
 		}
+		return verifyHash(userUrl, signing, request);
+	}
+
+	public boolean verifyHash(String userUrl, String signing, Request request) {
 		signing = signing.replace("\"", "");
 		signing = signing.trim();
 		if (signing.length() == 0) {

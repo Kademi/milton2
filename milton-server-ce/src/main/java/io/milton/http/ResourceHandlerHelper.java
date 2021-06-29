@@ -50,6 +50,28 @@ public class ResourceHandlerHelper {
 	 * request attribute name for the files map
 	 */
 	public static final String ATT_NAME_FILES = "_files";
+
+	public static void parseRequestParams(Request request) {
+		if( request.getAttributes().containsKey(ATT_NAME_PARAMS)) {
+			return ;
+		}
+		Map<String, String> params = new LinkedHashMap<>();
+
+		Map<String, FileItem> files = new HashMap<>();
+
+		try {
+			request.parseRequestParameters(params, files);
+		} catch (RequestParseException ex) {
+			if (log.isTraceEnabled()) {
+				log.warn("failed to parse request parameters: {}", ex.getMessage(), ex);
+			} else {
+				log.warn("failed to parse request parameters: {}", ex.getMessage());
+			}
+		}
+		request.getAttributes().put(ATT_NAME_PARAMS, params);
+		request.getAttributes().put(ATT_NAME_FILES, files);
+	}
+
 	private final HandlerHelper handlerHelper;
 	private final Http11ResponseHandler responseHandler; // set after construction
 	private final UrlAdapter urlAdapter;
@@ -66,23 +88,7 @@ public class ResourceHandlerHelper {
 	}
 
 	public void process(HttpManager manager, Request request, Response response, ResourceHandler handler) throws NotAuthorizedException, ConflictException, BadRequestException {
-		// need a linked hash map to preserve ordering of params
-		Map<String, String> params = new LinkedHashMap<String, String>();
-
-		Map<String, FileItem> files = new HashMap<String, FileItem>();
-
-		try {
-			request.parseRequestParameters(params, files);
-		} catch (RequestParseException ex) {
-			if (log.isTraceEnabled()) {
-				log.warn("failed to parse request parameters: {}", ex.getMessage(), ex);
-			} else {
-				log.warn("failed to parse request parameters: {}", ex.getMessage());
-			}
-			return;
-		}
-		request.getAttributes().put(ATT_NAME_PARAMS, params);
-		request.getAttributes().put(ATT_NAME_FILES, files);
+		ResourceHandlerHelper.parseRequestParams(request);
 
 		if (!handlerHelper.checkExpects(responseHandler, request, response)) {
 			return;
