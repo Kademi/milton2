@@ -1,4 +1,3 @@
-
 package io.milton.mail.receive;
 
 import io.milton.mail.AcceptEvent;
@@ -26,8 +25,9 @@ import org.subethamail.smtp.server.MessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
 public class SubethaSmtpServer implements MessageListener, SmtpServer {
+
     private final static Logger log = LoggerFactory.getLogger(SubethaSmtpServer.class);
-        
+
     protected SMTPServer smtpReceivingServer;
     protected final int smtpPort;
     protected final boolean enableTls;
@@ -35,7 +35,9 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     protected final List<Filter> filters;
 
     public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
-        if( resourceFactory ==null ) throw new RuntimeException( "Configuration problem. resourceFactory cannot be null");
+        if (resourceFactory == null) {
+            throw new RuntimeException("Configuration problem. resourceFactory cannot be null");
+        }
         this.smtpPort = smtpPort;
         this.enableTls = enableTls;
         this.resourceFactory = resourceFactory;
@@ -43,10 +45,9 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     }
 
     public SubethaSmtpServer(MailResourceFactory resourceFactory, List<Filter> filters) {
-        this(25,false,resourceFactory, filters);
+        this(25, false, resourceFactory, filters);
     }
 
-    
     @Override
     public void start() {
         initSmtpReceiver();
@@ -64,8 +65,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     public void stop() {
         try {
             smtpReceivingServer.stop();
-        } catch( Exception e ) {
-            log.debug( "exception stopping smtp receiver: " + e.getMessage()); // probably interrupted ex
+        } catch (Exception e) {
+            log.debug("exception stopping smtp receiver: " + e.getMessage()); // probably interrupted ex
         }
         smtpReceivingServer = null;
     }
@@ -77,12 +78,12 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
             return "[couldnt_read_subject]";
         }
     }
-    
+
     protected void initSmtpReceiver() {
-        Collection<MessageListener> listeners = new ArrayList<MessageListener>(1);
+        Collection<MessageListener> listeners = new ArrayList<>(1);
         listeners.add(this);
 
-        if( enableTls ) {
+        if (enableTls) {
             log.info("Creating TLS enabled server");
             this.smtpReceivingServer = new SMTPServer(listeners);
         } else {
@@ -96,17 +97,15 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         MessageListenerAdapter mla = (MessageListenerAdapter) smtpReceivingServer.getMessageHandlerFactory();
         mla.setAuthenticationHandlerFactory(null);
     }
-    
-    
-            
+
     /**
      * Subetha.MessageListener
-     * 
+     *
      */
     @Override
     public boolean accept(String sFrom, String sRecipient) {
-        log.debug("accept? " + sFrom + " - " +sRecipient);
-        if( sFrom == null || sFrom.length() == 0 ) {
+        log.debug("accept? " + sFrom + " - " + sRecipient);
+        if (sFrom == null || sFrom.length() == 0) {
             log.error("Cannot accept email with no from address. Recipient is: " + sRecipient);
             return false;
         }
@@ -129,9 +128,9 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     }
 
     /**
-     * Subetha MessageListener. Called when an SMTP message has bee received. Could
-     * be a send request from our domain or an email to our domain
-     * 
+     * Subetha MessageListener. Called when an SMTP message has bee received.
+     * Could be a send request from our domain or an email to our domain
+     *
      */
     @Override
     public void deliver(String sFrom, String sRecipient, final InputStream data) throws TooMuchDataException, IOException {
@@ -149,7 +148,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
                 Mailbox recipMailbox = resourceFactory.getMailbox(recip);
                 log.debug("recipient is known to us, so store: " + recip);
-                storeMail(recipMailbox,mm);
+                storeMail(recipMailbox, mm);
 
             }
         };
@@ -159,8 +158,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
     protected MimeMessage parseInput(InputStream data) {
         try {
-            MimeMessage mm = new MimeMessage( getSession(), data );
-            log.debug( "encoding: " + mm.getEncoding());
+            MimeMessage mm = new MimeMessage(getSession(), data);
+            log.debug("encoding: " + mm.getEncoding());
             return mm;
             //return new SMTPMessage(getSession(), data);
         } catch (MessagingException ex) {
@@ -168,17 +167,16 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         }
     }
 
-    protected  Session getSession() {
+    protected Session getSession() {
         return null;
     }
 
-    
     protected void storeMail(Mailbox recipMailbox, MimeMessage mm) {
         try {
             recipMailbox.storeMail(mm);
         } catch (Throwable e) {
             String subject = getSubjectDontThrow(mm);
-            log.error("Exception storing mail. mailbox: " + recipMailbox.getClass() + " message: " + subject,e);
+            log.error("Exception storing mail. mailbox: " + recipMailbox.getClass() + " message: " + subject, e);
         }
     }
 
@@ -194,6 +192,5 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     public MailResourceFactory getResourceFactory() {
         return resourceFactory;
     }
-
 
 }
