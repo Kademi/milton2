@@ -1,6 +1,5 @@
 package io.milton.mail;
 
-import io.milton.mail.pop.PopServer;
 import io.milton.mail.receive.SmtpServer;
 import io.milton.mail.send.MailSender;
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ public class MailServer {
     private MailSender mailSender;
     private SmtpServer smtpServer;
     private SmtpServer msaSmtpServer;
-    private PopServer popServer;
 
 
     /**
@@ -24,10 +22,9 @@ public class MailServer {
      * @param popServer
      * @param msaSmtpServer - MSA agent, for mail submission from end users
      */
-    public MailServer( MailSender mailSender, SmtpServer smtpServer, PopServer popServer, SmtpServer msaSmtpServer ) {
+    public MailServer( MailSender mailSender, SmtpServer smtpServer, SmtpServer msaSmtpServer ) {
         this.mailSender = mailSender;
         this.smtpServer = smtpServer;
-        this.popServer = popServer;
         this.msaSmtpServer = msaSmtpServer;
     }
 
@@ -48,10 +45,6 @@ public class MailServer {
             } else {
                 msaSmtpServer.start();
             }
-        }
-        if( popServer != null ) {
-            log.debug( "starting pop server.." );
-            popServer.start();
         }
         log.debug( "...done loading mail servers" );
     }
@@ -79,22 +72,11 @@ public class MailServer {
                 log.debug( "exception stopping msa server: " + e.getMessage());
             }
         }
-        if( popServer != null ) {
-            try {
-                popServer.stop();
-            } catch( Throwable e ) {
-                log.debug( "exception stopping pop server: " + e.getMessage());
-            }
-        }
         log.debug( "...done stopping mail servers" );
     }
 
     public MailSender getMailSender() {
         return mailSender;
-    }
-
-    public PopServer getPopServer() {
-        return popServer;
     }
 
     public SmtpServer getSmtpServer() {
@@ -103,10 +85,6 @@ public class MailServer {
 
     public void setMailSender( MailSender mailSender ) {
         this.mailSender = mailSender;
-    }
-
-    public void setPopServer( PopServer popServer ) {
-        this.popServer = popServer;
     }
 
     public void setSmtpServer( SmtpServer smtpServer ) {

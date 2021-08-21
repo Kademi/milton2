@@ -18,8 +18,6 @@
  */
 package io.milton.mail;
 
-import io.milton.mail.pop.MinaPopServer;
-import io.milton.mail.pop.PopServer;
 import io.milton.mail.receive.AuthenticatedSmtpServer;
 import io.milton.mail.receive.SmtpServer;
 import io.milton.mail.receive.SubethaSmtpServer;
@@ -45,7 +43,6 @@ public class MailServerBuilder {
     private MailSender mailSender;
     private SmtpServer smtpServer;
     private SmtpServer msaSmtpServer;
-    private PopServer popServer;
     private AspirinInternal aspirinInternal;
     private Configuration aspirinConfiguration;
     private ListenerManager listenerManager;
@@ -104,12 +101,7 @@ public class MailServerBuilder {
                 msaSmtpServer = new AuthenticatedSmtpServer(msaSmtpPort, enableMsaSmtpTls, mailResourceFactory, mailSender, filters);
             }
         }
-        if (popServer == null) {
-            if (enablePop) {
-                popServer = new MinaPopServer(mailResourceFactory, filters);
-            }
-        }
-        return new MailServer(mailSender, smtpServer, popServer, msaSmtpServer);
+        return new MailServer(mailSender, smtpServer, msaSmtpServer);
     }
 
     public MailSender getMailSender() {
@@ -126,14 +118,6 @@ public class MailServerBuilder {
 
     public void setMsaSmtpServer(SmtpServer msaSmtpServer) {
         this.msaSmtpServer = msaSmtpServer;
-    }
-
-    public PopServer getPopServer() {
-        return popServer;
-    }
-
-    public void setPopServer(PopServer popServer) {
-        this.popServer = popServer;
     }
 
     public SmtpServer getSmtpServer() {
@@ -271,6 +255,6 @@ public class MailServerBuilder {
     public void setDeliveryManager(DeliveryManager deliveryManager) {
         this.deliveryManager = deliveryManager;
     }
-    
-    
+
+
 }

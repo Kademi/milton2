@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>io.milton</groupId>
 		<artifactId>milton</artifactId>
-		<version>2.8.0.1.k8</version>
+		<version>2.8.0.1.k9</version>
 	</parent>
 	<groupId>io.milton</groupId>
 	<artifactId>milton-server-ce</artifactId>
@@ -154,6 +154,10 @@
 			<scope>compile</scope>
 			<type>jar</type>
 		</dependency>
+		<!--
+		<optional>true</optional>
+		-->
+		<!--
 		<dependency>
 			<groupId>org.apache.mina</groupId>
 			<artifactId>mina-core</artifactId>
@@ -161,6 +165,7 @@
 			<scope>compile</scope>
 			<type>jar</type>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
