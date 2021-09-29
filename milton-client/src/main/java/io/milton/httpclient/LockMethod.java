@@ -29,9 +29,9 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
 
 /**
  *
@@ -100,5 +100,5 @@ public class LockMethod extends HttpEntityEnclosingRequestBase {
             return "Infinite";
         }
         return "Second-" + timeout;
-    } 
+    }
 }

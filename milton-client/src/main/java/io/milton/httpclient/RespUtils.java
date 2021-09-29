@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
-import org.jdom.Element;
-import org.jdom.Namespace;
-import org.jdom.filter.ElementFilter;
+import org.jdom2.Element;
+import org.jdom2.Namespace;
+import org.jdom2.filter.ElementFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +38,18 @@ import org.slf4j.LoggerFactory;
 public class RespUtils {
 
     private static final Logger log = LoggerFactory.getLogger( RespUtils.class );
-    
+
     public static Namespace NS_DAV = Namespace.getNamespace("D", "DAV:");
-    
+
     public static QName davName(String localName) {
         return new QName(NS_DAV.getURI(), localName, NS_DAV.getPrefix());
-    }    
-    
-    
+    }
+
+
     public static String asString( Element el, String name ) {
         Element elChild = el.getChild( name, NS_DAV  );
         if( elChild == null ) {
-            //log.debug("No child: " + name + " of " + el.getName());            
+            //log.debug("No child: " + name + " of " + el.getName());
             return null;
         }
         return elChild.getText();
@@ -64,29 +64,29 @@ public class RespUtils {
         Element elChild = el.getChild( name, ns );
         if( elChild == null ) return null;
         return elChild.getText();
-    }    
-    
+    }
+
     public static Long asLong( Element el, String name ) {
         String s = asString( el, name );
         if( s == null || s.length()==0 ) return null;
         long l = Long.parseLong( s );
         return l;
     }
-    
+
     public static Long asLong( Element el, String name, Namespace ns ) {
         String s = asString( el, name, ns );
         if( s == null || s.length()==0 ) return null;
         long l = Long.parseLong( s );
         return l;
-    }    
+    }
 
     public static boolean hasChild( Element el, String name ) {
         if( el == null ) return false;
         List<Element> list = getElements(el, name);
-        
+
         return !list.isEmpty();
-    }    
-    
+    }
+
 
     public static  List<Element> getElements(Element root, String name) {
         List<Element> list = new ArrayList<Element>();
@@ -98,6 +98,6 @@ public class RespUtils {
             }
         }
         return list;
-    }    
-          
+    }
+
 }
