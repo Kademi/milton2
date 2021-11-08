@@ -62,10 +62,10 @@ public class StandardFilter implements Filter {
 			log.warn("conflictException: ", ex);
 			manager.getResponseHandler().respondConflict(ex.getResource(), response, request, INTERNAL_SERVER_ERROR_HTML);
 		} catch (NotAuthorizedException ex) {
-			log.warn("NotAuthorizedException");
+			log.info("NotAuthorizedException");
 			manager.getResponseHandler().respondUnauthorised(ex.getResource(), response, request);
 		} catch (NotFoundException ex) {
-			log.warn("NotFoundException");
+			log.info("NotFoundException");
 			manager.getResponseHandler().respondNotFound(response, request);
 		} catch (Throwable e) {
 			if (log.isDebugEnabled()) {
