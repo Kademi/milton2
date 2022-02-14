@@ -106,7 +106,7 @@ public class DefaultHttp11ResponseHandler implements Http11ResponseHandler, Buff
 	public void respondWithOptions(Resource resource, Response response, Request request, List<String> methodsAllowed) {
 		setRespondCommonHeaders(response, resource, Status.SC_OK, request.getAuthorization());
 		response.setAllowHeader(methodsAllowed);
-		response.setContentLengthHeader((long) 0); // Note that setting content length must be done last for tomcat5	
+		response.setContentLengthHeader((long) 0); // Note that setting content length must be done last for tomcat5
 	}
 
 	@Override
@@ -368,7 +368,6 @@ public class DefaultHttp11ResponseHandler implements Http11ResponseHandler, Buff
 
 	protected void setRespondCommonHeaders(Response response, Resource resource, Response.Status status, Auth auth) {
 		response.setStatus(status);
-		response.setNonStandardHeader("Server", "milton.io-" + miltonVerson);
 		response.setDateHeader(new Date());
 		response.setNonStandardHeader("Accept-Ranges", "bytes");
 		String etag = eTagGenerator.generateEtag(resource);
