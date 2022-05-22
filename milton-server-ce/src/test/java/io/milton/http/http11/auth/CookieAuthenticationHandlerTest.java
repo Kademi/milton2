@@ -18,6 +18,7 @@ package io.milton.http.http11.auth;
 import io.milton.http.AbstractRequest;
 import io.milton.http.Auth;
 import io.milton.http.Cookie;
+import io.milton.http.DefaultRequestHostService;
 import io.milton.http.FileItem;
 import io.milton.http.RequestParseException;
 import java.io.IOException;
@@ -66,10 +67,10 @@ public class CookieAuthenticationHandlerTest extends TestCase {
 	}
 
 	public void test_GenerateHash() {
-		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys);
+		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys, new DefaultRequestHostService());
 		String s = "/users/Reviewer/";
 		MockRequest request = new MockRequest();
-		String hash = c.getUrlSigningHash(s, request);
+		String hash = c.getUrlSigningHash(s, request, "localhost");
 		System.out.println("hash=" + hash);
 	}
 
@@ -85,7 +86,7 @@ public class CookieAuthenticationHandlerTest extends TestCase {
 //		assertEquals(s, validatedUrl);
 //	}
 	public void test_ValidateBase64() {
-		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys);
+		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys,  new DefaultRequestHostService());
 		String s = "/users/Reviewer/";
 		String encodedUserUrl = c.encodeUserUrl(s);
 		assertTrue(encodedUserUrl.startsWith("b64"));
@@ -95,13 +96,13 @@ public class CookieAuthenticationHandlerTest extends TestCase {
 
 		request.params.put(c.getCookieNameUserUrl(), encodedUserUrl);
 		request.params.put(c.getCookieNameUserUrlHash(), hash);
-		String validatedUrl = c.getUserUrl(request);
+		String validatedUrl = c.getUserUrl(request, null);
 		assertNotNull(validatedUrl);
 		assertEquals(s, validatedUrl);
 	}
 
 	public void test_getUserUrlFromRequest() {
-		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys);
+		CookieAuthenticationHandler c = new CookieAuthenticationHandler(nonceProvider, Collections.EMPTY_LIST, null, keys,  new DefaultRequestHostService());
 		String s = "/users/Reviewer/";
 		String encodedUserUrl = c.encodeUserUrl(s);
 		assertTrue(encodedUserUrl.startsWith("b64"));
@@ -112,7 +113,7 @@ public class CookieAuthenticationHandlerTest extends TestCase {
 		String loginToken = c.getLoginToken(encodedUserUrl, hash);
 
 		request.params.put(c.getLoginTokenName(), loginToken);
-		String validatedUrl = c.getUserUrl(request);
+		String validatedUrl = c.getUserUrl(request, null);
 
 		assertNotNull(validatedUrl);
 		assertEquals(s, validatedUrl);

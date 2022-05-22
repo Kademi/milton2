@@ -30,11 +30,13 @@ import io.milton.http.AuthenticationHandler;
 import io.milton.http.AuthenticationService;
 import io.milton.http.AuthorisationListener;
 import io.milton.http.CompressingResponseHandler;
+import io.milton.http.DefaultRequestHostService;
 import io.milton.http.Filter;
 import io.milton.http.HandlerHelper;
 import io.milton.http.HttpExtension;
 import io.milton.http.HttpManager;
 import io.milton.http.ProtocolHandlers;
+import io.milton.http.RequestHostService;
 import io.milton.http.ResourceFactory;
 import io.milton.http.ResourceHandlerHelper;
 import io.milton.http.StandardFilter;
@@ -166,6 +168,7 @@ public class HttpManagerBuilder {
 	protected List<AuthenticationHandler> extraAuthenticationHandlers;
 	protected List<AuthenticationHandler> cookieDelegateHandlers;
 	protected DigestAuthenticationHandler digestHandler;
+	protected RequestHostService requestHostService;
 	protected BasicAuthHandler basicHandler;
 	protected CookieAuthenticationHandler cookieAuthenticationHandler;
 	protected FormAuthenticationHandler formAuthenticationHandler;
@@ -334,10 +337,13 @@ public class HttpManagerBuilder {
 					nonceProvider = new SimpleMemoryNonceProvider(nonceValiditySeconds, expiredNonceRemover, nonces);
 					showLog("nonceProvider", nonceProvider);
 				}
+				if( requestHostService == null ) {
+					requestHostService = new DefaultRequestHostService();
+				}
 				if (digestHandler == null) {
 					if (enableDigestAuth) {
 
-						digestHandler = new DigestAuthenticationHandler(nonceProvider);
+						digestHandler = new DigestAuthenticationHandler(nonceProvider, requestHostService);
 					}
 				}
 				if (digestHandler != null) {
@@ -388,7 +394,7 @@ public class HttpManagerBuilder {
 							}
 						}
 						initCookieSigningKeys();
-						cookieAuthenticationHandler = new CookieAuthenticationHandler(nonceProvider, cookieDelegateHandlers, mainResourceFactory, cookieSigningKeys);
+						cookieAuthenticationHandler = new CookieAuthenticationHandler(nonceProvider, cookieDelegateHandlers, mainResourceFactory, cookieSigningKeys, requestHostService);
 						cookieAuthenticationHandler.setUseLongLivedCookies(useLongLivedCookies);
 						authenticationHandlers.add(cookieAuthenticationHandler);
 					}
@@ -1085,6 +1091,14 @@ public class HttpManagerBuilder {
 
 	public void setDigestHandler(DigestAuthenticationHandler digestHandler) {
 		this.digestHandler = digestHandler;
+	}
+
+	public RequestHostService getRequestHostService() {
+		return requestHostService;
+	}
+
+	public void setRequestHostService(RequestHostService requestHostService) {
+		this.requestHostService = requestHostService;
 	}
 
 	public OAuth2AuthenticationHandler getOAuth2Handler() {

@@ -22,6 +22,7 @@ package io.milton.http.http11.auth;
 import io.milton.http.Auth;
 import io.milton.http.AuthenticationHandler;
 import io.milton.http.Request;
+import io.milton.http.RequestHostService;
 import io.milton.resource.Resource;
 import io.milton.http.SecurityManager;
 import java.util.List;
@@ -43,26 +44,26 @@ public class SecurityManagerDigestAuthenticationHandler implements Authenticatio
     private final SecurityManager securityManager;
     private final DigestHelper digestHelper;
 
-    public SecurityManagerDigestAuthenticationHandler( NonceProvider nonceProvider, SecurityManager securityManager ) {
+    public SecurityManagerDigestAuthenticationHandler( NonceProvider nonceProvider, SecurityManager securityManager, RequestHostService requestHostService ) {
         this.nonceProvider = nonceProvider;
         this.securityManager = securityManager;
-        digestHelper = new DigestHelper(nonceProvider);
+        digestHelper = new DigestHelper(nonceProvider, requestHostService);
     }
 
-    public SecurityManagerDigestAuthenticationHandler(SecurityManager securityManager) {
+    public SecurityManagerDigestAuthenticationHandler(SecurityManager securityManager, RequestHostService requestHostService) {
 		Map<UUID, Nonce> nonces = new ConcurrentHashMap<UUID, Nonce>();
 		int nonceValiditySeconds = 60*60*24;
 		ExpiredNonceRemover expiredNonceRemover = new ExpiredNonceRemover(nonces, nonceValiditySeconds);
 		this.nonceProvider = new SimpleMemoryNonceProvider(nonceValiditySeconds, expiredNonceRemover, nonces);
         this.securityManager = securityManager;
-        digestHelper = new DigestHelper(nonceProvider);
+        digestHelper = new DigestHelper(nonceProvider, requestHostService);
     }
 
 	@Override
 	public boolean credentialsPresent(Request request) {
 		return request.getAuthorization() != null;
-	}	
-	
+	}
+
 	@Override
     public boolean supports( Resource r, Request request ) {
         Auth auth = request.getAuthorization();
@@ -75,7 +76,7 @@ public class SecurityManagerDigestAuthenticationHandler implements Authenticatio
 	@Override
     public Object authenticate( Resource r, Request request ) {
         Auth auth = request.getAuthorization();
-        DigestResponse resp = digestHelper.calculateResponse(auth, securityManager.getRealm(request.getHostHeader()), request.getMethod());
+        DigestResponse resp = digestHelper.calculateResponse(auth, securityManager.getRealm(request.getHostHeader()), request.getMethod(), r);
         if( resp == null ) {
             log.debug("requested digest authentication is invalid or incorrectly formatted");
             return null;

@@ -20,8 +20,12 @@
 package io.milton.http.http11.auth;
 
 import io.milton.http.Auth;
+import io.milton.http.HttpManager;
+import io.milton.http.Request;
 import io.milton.http.Request.Method;
+import io.milton.http.RequestHostService;
 import io.milton.http.http11.auth.NonceProvider.NonceValidity;
+import io.milton.resource.Resource;
 
 import java.io.UnsupportedEncodingException;
 
@@ -37,12 +41,14 @@ public class DigestHelper {
     private static final Logger log = LoggerFactory.getLogger( DigestHelper.class );
 
     private final NonceProvider nonceProvider;
+	private final RequestHostService requestHostService;
 
-    public DigestHelper(NonceProvider nonceProvider) {
+    public DigestHelper(NonceProvider nonceProvider, RequestHostService requestHostService) {
         this.nonceProvider = nonceProvider;
+		this.requestHostService = requestHostService;
     }
-                
-    public DigestResponse calculateResponse( Auth auth, String expectedRealm, Method method ) {
+
+    public DigestResponse calculateResponse( Auth auth, String expectedRealm, Method method, Resource r ) {
 		try {
 			// Check all required parameters were supplied (ie RFC 2069)
 			if( ( auth.getUser() == null ) || ( auth.getRealm() == null ) || ( auth.getNonce() == null ) || ( auth.getUri() == null ) ) {
@@ -82,7 +88,9 @@ public class DigestHelper {
 			// format of nonce is
 			//   base64(expirationTime + "" + md5Hex(expirationTime + "" + key))
 			String plainTextNonce = new String( Base64.decodeBase64( auth.getNonce().getBytes("UTF-8") ) );
-			NonceValidity validity = nonceProvider.getNonceValidity( plainTextNonce, nc, auth.getUser() );
+			Request request = HttpManager.request();
+			String host = requestHostService.getHostName(request, r);
+			NonceValidity validity = nonceProvider.getNonceValidity( plainTextNonce, nc, auth.getUser(), host );
 	//        if( NonceValidity.INVALID.equals( validity ) ) {
 	//            log.debug( "invalid nonce: " + plainTextNonce );
 	//            return null;

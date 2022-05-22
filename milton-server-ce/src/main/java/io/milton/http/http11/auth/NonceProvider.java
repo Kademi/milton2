@@ -35,7 +35,7 @@ import io.milton.http.Request;
  */
 public interface NonceProvider {
 
-   
+
 
     public enum NonceValidity {
 
@@ -58,21 +58,21 @@ public interface NonceProvider {
      * @return
      */
 	NonceValidity getNonceValidity( String nonce, Long nonceCount );
-	
+
 	/**
 	 * Default implementation which calls getNonceValidity( String nonce, Long nonceCount )
-	 * 
+	 *
 	 * Implementations which wish to apply extra security can check the userid is valid for the nonce
 	 * , IF it is provided
-	 * 
+	 *
 	 * Note that the userID may be EITHER a userUrl (from cookie auth handler) or a username (from Digest auth)
-	 * 
+	 *
 	 * @param nonce
 	 * @param nonceCount
 	 * @param userId
-	 * @return 
+	 * @return
 	 */
-    default	NonceValidity getNonceValidity( String nonce, Long nonceCount, String userId ) {
+    default	NonceValidity getNonceValidity( String nonce, Long nonceCount, String userId, String host ) {
 		return getNonceValidity(nonce, nonceCount);
 	}
 
@@ -84,12 +84,12 @@ public interface NonceProvider {
      * @return - some string to be used as a nonce value.
      */
     String createNonce( Request request );
-	
+
 	/**
-	 * 
+	 *
 	 * @param request
 	 * @param userUrl
-	 * @return 
+	 * @return
 	 */
 	default String createNonce( Request request, String userUrl ) {
 		return createNonce(request);

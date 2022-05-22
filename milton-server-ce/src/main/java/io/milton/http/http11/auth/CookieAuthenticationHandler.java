@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 public class CookieAuthenticationHandler implements AuthenticationHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(CookieAuthenticationHandler.class);
+
 	private static final String HANDLER_ATT_NAME = "_delegatedAuthenticationHandler";
 	public static final int SECONDS_PER_YEAR = 60 * 60 * 24 * 365;
 	private final String requestParamLogout = "miltonLogout";
@@ -51,15 +52,17 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	private final List<AuthenticationHandler> handlers;
 	private final ResourceFactory principalResourceFactory;
 	private final NonceProvider nonceProvider;
+	private final RequestHostService requestHostService;
 	private String userUrlAttName = "userUrl";
 	private boolean useLongLivedCookies = true;
 	private final List<String> keys;
 	private String keepLoggedInParamName = "keepLoggedIn";
 
-	public CookieAuthenticationHandler(NonceProvider nonceProvider, List<AuthenticationHandler> handlers, ResourceFactory principalResourceFactory, List<String> keys) {
+	public CookieAuthenticationHandler(NonceProvider nonceProvider, List<AuthenticationHandler> handlers, ResourceFactory principalResourceFactory, List<String> keys, RequestHostService requestHostService) {
 		this.nonceProvider = nonceProvider;
 		this.handlers = handlers;
 		this.principalResourceFactory = principalResourceFactory;
+		this.requestHostService = requestHostService;
 		this.keys = keys;
 	}
 
@@ -83,7 +86,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 
 		// check for a logout command, if so logout
 		if (isLogout(request)) {
-			String userUrl = getUserUrl(request);
+			String userUrl = getUserUrl(request, r);
 			log.info("Is LogOut request, clear cookie");
 			if (userUrl != null && userUrl.length() > 0) {
 				clearCookieValue(HttpManager.response());
@@ -102,7 +105,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			return true;
 		}
 
-		String userUrl = getUserUrl(request);
+		String userUrl = getUserUrl(request, r);
 		return userUrl != null;
 	}
 
@@ -149,7 +152,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 				log.trace("authenticate: is logout");
 				return null;
 			} else {
-				String userUrl = getUserUrl(request);
+				String userUrl = getUserUrl(request, resource);
 				if (userUrl == null) {
 					log.trace("authenticate: no userUrl in request or cookie, nothing to do");
 					// no token in request, so is anonymous
@@ -216,10 +219,10 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		if (userUrl == null) {
 			throw new NullPointerException("user identifier returned a null value");
 		}
-		setLoginCookies(userUrl, request);
+		setLoginCookies(userUrl, request, user);
 	}
 
-	public void setLoginCookies(String userUrl, Request request) {
+	public void setLoginCookies(String userUrl, Request request, Resource r) {
 		if (request == null) {
 			return;
 		}
@@ -229,7 +232,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			log.trace("setLoginCookies: No response object");
 			return;
 		}
-		String signing = getUrlSigningHash(userUrl, request);
+		String signing = getUrlSigningHash(userUrl, request, r);
 		String sKeepLoggedIn = null;
 		if (request.getParams() != null) {
 			sKeepLoggedIn = request.getParams().get(keepLoggedInParamName);
@@ -280,7 +283,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	 * @param request
 	 * @return
 	 */
-	public String getUserUrl(Request request) {
+	public String getUserUrl(Request request, Resource r) {
 		if (request == null) {
 			return null;
 		}
@@ -289,7 +292,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		if (userUrl != null) {
 			userUrl = userUrl.trim();
 			if (userUrl.length() > 0) {
-				if (verifyHash(userUrl, request)) {
+				if (verifyHash(userUrl, request, r)) {
 					return userUrl;
 				} else {
 					log.info("Invalid userUrl hash, possible attempted hacking attempt. userUrl=" + userUrl);
@@ -392,15 +395,15 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		return signing;
 	}
 
-	public boolean verifyHash(String userUrl, Request request) {
+	public boolean verifyHash(String userUrl, Request request, Resource r) {
 		String signing = getHashFromRequest(request);
 		if (signing == null) {
 			return false;
 		}
-		return verifyHash(userUrl, signing, request);
+		return verifyHash(userUrl, signing, request, r);
 	}
 
-	public boolean verifyHash(String userUrl, String signing, Request request) {
+	public boolean verifyHash(String userUrl, String signing, Request request, Resource r) {
 		signing = signing.replace("\"", "");
 		signing = signing.trim();
 		if (signing.length() == 0) {
@@ -410,7 +413,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 
 		for (String key : keys) {
 			if (key != null && key.length() > 0) {
-				if (verifyHash(userUrl, key, signing, request)) {
+				if (verifyHash(userUrl, key, signing, request, r)) {
 					return true;
 				}
 			}
@@ -418,14 +421,14 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		return false;
 	}
 
-	private boolean verifyHash(String userUrl, String key, String signing, Request request) {
+	private boolean verifyHash(String userUrl, String key, String signing, Request request, Resource r) {
 		// split the signing into nonce and hmac
 		int pos = signing.indexOf(":");
 		if (pos < 1) {
 			log.warn("Invalid cookie signing format, no semi-colon: " + signing + " Should be in form - nonce:hmac");
 			return false;
 		}
-		String host = getDomain(request);
+		String host = requestHostService.getHostName(request, r);
 		String nonce = signing.substring(0, pos);
 		String hmac = signing.substring(pos + 1);
 		String message = nonce + ":" + userUrl + ":" + host;
@@ -446,7 +449,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			return false;
 		} else {
 			// signed ok, check to see if nonce is still valid
-			NonceProvider.NonceValidity val = nonceProvider.getNonceValidity(nonce, null, userUrl);
+			NonceProvider.NonceValidity val = nonceProvider.getNonceValidity(nonce, null, userUrl, host);
 			if (val == null) {
 				throw new RuntimeException("Unhandled nonce validity value");
 			} else {
@@ -457,7 +460,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 						// Hopefully the nonce provider will have a time limit and only return expired
 						// for recently expired nonces. So we will accept these but replace with a refreshed nonce
 						log.warn("Nonce is valid, but expired. We will accept it but reset it");
-						setLoginCookies(userUrl, request);
+						setLoginCookies(userUrl, request, r);
 						return true;
 					case INVALID:
 						log.warn("Received an invalid nonce: " + nonce + " not found in provider: " + nonceProvider);
@@ -467,17 +470,6 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 				}
 			}
 		}
-	}
-
-	private String getDomain(Request request) {
-		String host = request.getHostHeader();
-		if (host.contains(":")) {
-			host = host.substring(0, host.indexOf(":"));
-		}
-		if (host == null) {
-			host = "nohost";
-		}
-		return host;
 	}
 
 	/**
@@ -490,8 +482,8 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	 * @param request
 	 * @return
 	 */
-	public String getUrlSigningHash(String userUrl, Request request) {
-		String host = getDomain(request);
+	public String getUrlSigningHash(String userUrl, Request request, Resource r) {
+		String host = requestHostService.getHostName(request, r);
 		return getUrlSigningHash(userUrl, request, host);
 	}
 
@@ -510,8 +502,8 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		return signing;
 	}
 
-	public String getLoginToken(String userUrl, Request request) {
-		String host = getDomain(request);
+	public String getLoginToken(String userUrl, Request request, Resource r) {
+		String host = requestHostService.getHostName(request, r);
 		return getLoginToken(userUrl, request, host);
 	}
 
