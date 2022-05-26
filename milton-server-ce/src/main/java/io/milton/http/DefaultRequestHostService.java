@@ -15,8 +15,6 @@
  */
 package io.milton.http;
 
-import io.milton.resource.Resource;
-
 /**
  *
  * @author brad
@@ -24,7 +22,7 @@ import io.milton.resource.Resource;
 public class DefaultRequestHostService implements RequestHostService {
 
 	@Override
-	public String getHostName(Request request, Resource resource) {
+	public String getHostName(Request request) {
 		if( request == null ) {
 			return null;
 		}

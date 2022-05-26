@@ -76,11 +76,16 @@ public class ResourceHandlerHelper {
 	private final Http11ResponseHandler responseHandler; // set after construction
 	private final UrlAdapter urlAdapter;
 	private final AuthenticationService authenticationService;
+	private final RequestHostService requestHostService;
 
-	public ResourceHandlerHelper(HandlerHelper handlerHelper, UrlAdapter urlAdapter, Http11ResponseHandler responseHandler, AuthenticationService authenticationService) {
+	public ResourceHandlerHelper(HandlerHelper handlerHelper, UrlAdapter urlAdapter, Http11ResponseHandler responseHandler, AuthenticationService authenticationService, RequestHostService requestHostService) {
 		if (handlerHelper == null) {
 			throw new IllegalArgumentException("handlerHelper may not be null");
 		}
+		if( requestHostService == null ) {
+			throw new IllegalArgumentException("requestHostService may not be null");
+		}
+		this.requestHostService = requestHostService;
 		this.responseHandler = responseHandler;
 		this.urlAdapter = urlAdapter;
 		this.handlerHelper = handlerHelper;
@@ -93,7 +98,7 @@ public class ResourceHandlerHelper {
 		if (!handlerHelper.checkExpects(responseHandler, request, response)) {
 			return;
 		}
-		String host = request.getHostHeader();
+		String host = requestHostService.getHostName(request);
 		String url = urlAdapter.getUrl(request);
 		//log.debug( "find resource: path: " + url + " host: " + host );
 		long tm = System.currentTimeMillis();

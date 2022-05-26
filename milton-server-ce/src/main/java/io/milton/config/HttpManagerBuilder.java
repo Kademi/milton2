@@ -509,7 +509,7 @@ public class HttpManagerBuilder {
 		}
 		handlerHelper.setEnableExpectContinue(enableExpectContinue);
 		if (resourceHandlerHelper == null) {
-			resourceHandlerHelper = new ResourceHandlerHelper(handlerHelper, urlAdapter, webdavResponseHandler, authenticationService);
+			resourceHandlerHelper = new ResourceHandlerHelper(handlerHelper, urlAdapter, webdavResponseHandler, authenticationService, requestHostService);
 			showLog("resourceHandlerHelper", resourceHandlerHelper);
 		}
 		// Build stack of resource factories before protocols, because protocols use (so depend on)

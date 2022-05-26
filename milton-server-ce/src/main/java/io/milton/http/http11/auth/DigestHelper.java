@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package io.milton.http.http11.auth;
 
 import io.milton.http.Auth;
@@ -38,91 +37,92 @@ import org.slf4j.LoggerFactory;
  */
 public class DigestHelper {
 
-    private static final Logger log = LoggerFactory.getLogger( DigestHelper.class );
+	private static final Logger log = LoggerFactory.getLogger(DigestHelper.class);
 
-    private final NonceProvider nonceProvider;
+	private final NonceProvider nonceProvider;
 	private final RequestHostService requestHostService;
 
-    public DigestHelper(NonceProvider nonceProvider, RequestHostService requestHostService) {
-        this.nonceProvider = nonceProvider;
+	public DigestHelper(NonceProvider nonceProvider, RequestHostService requestHostService) {
+		this.nonceProvider = nonceProvider;
 		this.requestHostService = requestHostService;
-    }
+	}
 
-    public DigestResponse calculateResponse( Auth auth, String expectedRealm, Method method, Resource r ) {
+	public DigestResponse calculateResponse(Auth auth, String expectedRealm, Method method, Resource r) {
 		try {
 			// Check all required parameters were supplied (ie RFC 2069)
-			if( ( auth.getUser() == null ) || ( auth.getRealm() == null ) || ( auth.getNonce() == null ) || ( auth.getUri() == null ) ) {
-				log.warn( "missing params" );
+			if ((auth.getUser() == null) || (auth.getRealm() == null) || (auth.getNonce() == null) || (auth.getUri() == null)) {
+				log.warn("missing params");
 				return null;
 			}
 
 			// Check all required parameters for an "auth" qop were supplied (ie RFC 2617)
 			Long nc;
-			if( "auth".equals( auth.getQop() ) ) {
-				if( ( auth.getNc() == null ) || ( auth.getCnonce() == null ) ) {
-					log.warn( "missing params: nc and/or cnonce" );
+			if ("auth".equals(auth.getQop())) {
+				if ((auth.getNc() == null) || (auth.getCnonce() == null)) {
+					log.warn("missing params: nc and/or cnonce");
 					return null;
 				}
-				nc = Long.parseLong( auth.getNc(), 16); // the nonce-count. hex value, must always increase
+				nc = Long.parseLong(auth.getNc(), 16); // the nonce-count. hex value, must always increase
 			} else {
 				nc = null;
 			}
 
 			// Check realm name equals what we expected
-			if( expectedRealm == null ) throw new IllegalStateException( "realm is null");
-			if( !expectedRealm.equals( auth.getRealm() ) ) {
-				log.warn( "incorrect realm: resource: " + expectedRealm + " given: " + auth.getRealm() );
+			if (expectedRealm == null) {
+				throw new IllegalStateException("realm is null");
+			}
+			if (!expectedRealm.equals(auth.getRealm())) {
+				log.warn("incorrect realm: resource: " + expectedRealm + " given: " + auth.getRealm());
 				return null;
 			}
 
 			// Check nonce was a Base64 encoded (as sent by DigestProcessingFilterEntryPoint)
-			if( !Base64.isArrayByteBase64( auth.getNonce().getBytes("UTF-8") ) ) {
-				log.warn( "nonce not base64 encoded" );
+			if (!Base64.isArrayByteBase64(auth.getNonce().getBytes("UTF-8"))) {
+				log.warn("nonce not base64 encoded");
 				return null;
 			}
 
-			log.debug( "nc: " + auth.getNc());
-
+			log.debug("nc: " + auth.getNc());
 
 			// Decode nonce from Base64
 			// format of nonce is
 			//   base64(expirationTime + "" + md5Hex(expirationTime + "" + key))
-			String plainTextNonce = new String( Base64.decodeBase64( auth.getNonce().getBytes("UTF-8") ) );
+			String plainTextNonce = new String(Base64.decodeBase64(auth.getNonce().getBytes("UTF-8")));
 			Request request = HttpManager.request();
-			String host = requestHostService.getHostName(request, r);
-			NonceValidity validity = nonceProvider.getNonceValidity( plainTextNonce, nc, auth.getUser(), host );
-	//        if( NonceValidity.INVALID.equals( validity ) ) {
-	//            log.debug( "invalid nonce: " + plainTextNonce );
-	//            return null;
-	//        } else if( NonceValidity.EXPIRED.equals( validity ) ) {
-	//            log.debug( "expired nonce: " + plainTextNonce );
-	//            // make this known so that we can add stale field to challenge
-	//            auth.setNonceStale( true );
-	//            return null;
-	//        }
+			String host = requestHostService.getHostName(request);
+			NonceValidity validity = nonceProvider.getNonceValidity(plainTextNonce, nc, auth.getUser(), host);
+			//        if( NonceValidity.INVALID.equals( validity ) ) {
+			//            log.debug( "invalid nonce: " + plainTextNonce );
+			//            return null;
+			//        } else if( NonceValidity.EXPIRED.equals( validity ) ) {
+			//            log.debug( "expired nonce: " + plainTextNonce );
+			//            // make this known so that we can add stale field to challenge
+			//            auth.setNonceStale( true );
+			//            return null;
+			//        }
 
-			DigestResponse resp = toDigestResponse( auth, method );
+			DigestResponse resp = toDigestResponse(auth, method);
 			return resp;
 		} catch (UnsupportedEncodingException ex) {
 			throw new RuntimeException(ex);
 		}
-    }
+	}
 
-    public String getChallenge( String nonceValue, Auth auth, String actualRealm ) {
+	public String getChallenge(String nonceValue, Auth auth, String actualRealm) {
 		try {
-			String nonceValueBase64 = new String( Base64.encodeBase64( nonceValue.getBytes("UTF-8") ) );
+			String nonceValueBase64 = new String(Base64.encodeBase64(nonceValue.getBytes("UTF-8")));
 
 			// qop is quality of protection, as defined by RFC 2617.
 			// we do not use opaque due to IE violation of RFC 2617 in not
 			// representing opaque on subsequent requests in same session.
 			String authenticateHeader = "Digest realm=\"" + actualRealm
-				+ "\", " + "qop=\"auth\", nonce=\"" + nonceValueBase64
-				+ "\"";
+					+ "\", " + "qop=\"auth\", nonce=\"" + nonceValueBase64
+					+ "\"";
 
-			if( auth != null ) {
-				if( auth.isNonceStale() ) {
+			if (auth != null) {
+				if (auth.isNonceStale()) {
 					authenticateHeader = authenticateHeader
-						+ ", stale=\"true\"";
+							+ ", stale=\"true\"";
 				}
 			}
 
@@ -130,21 +130,20 @@ public class DigestHelper {
 		} catch (UnsupportedEncodingException ex) {
 			throw new RuntimeException(ex);
 		}
-    }
+	}
 
+	private DigestResponse toDigestResponse(Auth auth, Method m) {
+		DigestResponse dr = new DigestResponse(
+				m,
+				auth.getUser(),
+				auth.getRealm(),
+				auth.getNonce(),
+				auth.getUri(),
+				auth.getResponseDigest(),
+				auth.getQop(),
+				auth.getNc(),
+				auth.getCnonce());
+		return dr;
 
-    private DigestResponse toDigestResponse( Auth auth, Method m ) {
-        DigestResponse dr = new DigestResponse(
-            m,
-            auth.getUser(),
-            auth.getRealm(),
-            auth.getNonce(),
-            auth.getUri(),
-            auth.getResponseDigest(),
-            auth.getQop(),
-            auth.getNc(),
-            auth.getCnonce() );
-        return dr;
-
-    }
+	}
 }

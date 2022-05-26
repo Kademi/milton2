@@ -428,7 +428,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			log.warn("Invalid cookie signing format, no semi-colon: " + signing + " Should be in form - nonce:hmac");
 			return false;
 		}
-		String host = requestHostService.getHostName(request, r);
+		String host = requestHostService.getHostName(request);
 		String nonce = signing.substring(0, pos);
 		String hmac = signing.substring(pos + 1);
 		String message = nonce + ":" + userUrl + ":" + host;
@@ -483,7 +483,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	 * @return
 	 */
 	public String getUrlSigningHash(String userUrl, Request request, Resource r) {
-		String host = requestHostService.getHostName(request, r);
+		String host = requestHostService.getHostName(request);
 		return getUrlSigningHash(userUrl, request, host);
 	}
 
@@ -503,7 +503,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	}
 
 	public String getLoginToken(String userUrl, Request request, Resource r) {
-		String host = requestHostService.getHostName(request, r);
+		String host = requestHostService.getHostName(request);
 		return getLoginToken(userUrl, request, host);
 	}
 

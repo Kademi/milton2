@@ -15,8 +15,6 @@
  */
 package io.milton.http;
 
-import io.milton.resource.Resource;
-
 /**
  * Pluggable mechanism to determine the host name of a request. This will normally
  * be based on the host header in the request, but can be extended to include logic
@@ -25,5 +23,5 @@ import io.milton.resource.Resource;
  * @author brad
  */
 public interface RequestHostService {
-    String getHostName(Request request, Resource resource);
+    String getHostName(Request request);
 }
