@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.commons.lang.StringUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,17 @@ public class SimpleMemoryNonceProvider implements NonceProvider {
 		this.nonceValiditySeconds = nonceValiditySeconds;
 		this.remover = new ExpiredNonceRemover(nonces, nonceValiditySeconds);
 	}
+
+	@Override
+	public void invalidateNonce(String nonce) {
+		if( StringUtils.isBlank(nonce)) {
+			return ;
+		}
+		UUID uuid = UUID.fromString(nonce);
+		this.nonces.remove(uuid);
+	}
+
+
 
 	public Nonce createNonceObject(Request request) {
 		UUID id = UUID.randomUUID();
@@ -152,8 +164,8 @@ public class SimpleMemoryNonceProvider implements NonceProvider {
 	public Map<UUID, Nonce> getNonces() {
 		return nonces;
 	}
-	
-	
+
+
 }
 
 

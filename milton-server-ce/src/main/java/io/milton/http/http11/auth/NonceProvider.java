@@ -60,6 +60,14 @@ public interface NonceProvider {
 	NonceValidity getNonceValidity( String nonce, Long nonceCount );
 
 	/**
+	 * Make the nonce no longer valid, either by deleting it or otherwise marking it as invalid. Subsequent
+	 * calls to getNonceValidity should return INVALID
+	 *
+	 * @param nonce
+	 */
+	void invalidateNonce(String nonce);
+
+	/**
 	 * Default implementation which calls getNonceValidity( String nonce, Long nonceCount )
 	 *
 	 * Implementations which wish to apply extra security can check the userid is valid for the nonce

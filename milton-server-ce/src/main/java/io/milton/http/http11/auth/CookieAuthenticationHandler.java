@@ -89,7 +89,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			String userUrl = getUserUrl(request, r);
 			log.info("Is LogOut request, clear cookie");
 			if (userUrl != null && userUrl.length() > 0) {
-				clearCookieValue(HttpManager.response());
+				clearCookieValue(request, HttpManager.response());
 			}
 		}
 
@@ -176,7 +176,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 					}
 					if (r == null) {
 						log.warn("User not found host: " + host + " userUrl: " + userUrl + " with resourcefactory: " + principalResourceFactory);
-						clearCookieValue(HttpManager.response());
+						clearCookieValue(request, HttpManager.response());
 					} else {
 						// Logged in ok with details. Check if details came from request parameter, in
 						// which case we need to set cookies
@@ -551,8 +551,19 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		return (encodedUserUrl);
 	}
 
-	private void clearCookieValue(Response response) {
+	private void clearCookieValue(Request request, Response response) {
 		log.info("clearCookieValue");
+		String signing = getHashFromRequest(request);
+		signing = signing.replace("\"", "");
+		signing = signing.trim();
+		int pos = signing.indexOf(":");
+		if (pos < 1) {
+			log.warn("clearCookieValue: Invalid cookie signing format, no semi-colon: " + signing + " Should be in form - nonce:hmac");
+		} else {
+			String nonce = signing.substring(0, pos);
+			nonceProvider.invalidateNonce(nonce);
+		}
+
 		response.setCookie(cookieUserUrlValue, "");
 		response.setCookie(cookieUserUrlHash, "");
 	}
