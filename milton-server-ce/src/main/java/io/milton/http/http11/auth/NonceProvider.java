@@ -102,4 +102,8 @@ public interface NonceProvider {
 	default String createNonce( Request request, String userUrl ) {
 		return createNonce(request);
 	}
+
+	default String createNonce( Request request, String userUrl, String host ) {
+		return createNonce(request);
+	}
 }

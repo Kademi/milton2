@@ -182,8 +182,13 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 						// which case we need to set cookies
 						if (request.getParams() != null && (request.getParams().containsKey(cookieUserUrlValue) || request.getParams().containsKey(loginTokenName))) {
 							if (r instanceof DiscretePrincipal) {
-								DiscretePrincipal dp = (DiscretePrincipal) r;
-								setLoginCookies(dp, request);
+//								DiscretePrincipal dp = (DiscretePrincipal) r;
+//								setLoginCookies(dp, request);
+
+
+								Response response = HttpManager.response();
+								String signing = getHashFromRequest(request);
+								setCookieValues(response, userUrl, signing, isKeepLoggedIn(request));
 							} else {
 								log.warn("Found user from request, but user object is not expected type. Should be " + DiscretePrincipal.class + " but is " + r.getClass());
 							}
@@ -233,6 +238,15 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			return;
 		}
 		String signing = getUrlSigningHash(userUrl, request, r);
+
+		boolean keepLoggedIn = isKeepLoggedIn(request);
+
+
+		setCookieValues(response, userUrl, signing, keepLoggedIn);
+		request.getAttributes().put(userUrlAttName, userUrl);
+	}
+
+	private boolean isKeepLoggedIn(Request request) {
 		String sKeepLoggedIn = null;
 		if (request.getParams() != null) {
 			sKeepLoggedIn = request.getParams().get(keepLoggedInParamName);
@@ -243,9 +257,8 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		} else {
 			keepLoggedIn = true; // default
 		}
+		return keepLoggedIn;
 
-		setCookieValues(response, userUrl, signing, keepLoggedIn);
-		request.getAttributes().put(userUrlAttName, userUrl);
 	}
 
 	@Override
@@ -488,7 +501,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	}
 
 	public String getUrlSigningHash(String userUrl, Request request, String host) {
-		String nonce = nonceProvider.createNonce(request, userUrl);
+		String nonce = nonceProvider.createNonce(request, userUrl, host);
 		String message = nonce + ":" + userUrl + ":" + host;
 		String key = keys.get(keys.size() - 1); // Use the last key for new cookies
 		String hash = HmacUtils.calcShaHash(message, key);
