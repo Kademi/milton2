@@ -31,6 +31,7 @@ import io.milton.http.AuthenticationService;
 import io.milton.http.AuthorisationListener;
 import io.milton.http.CompressingResponseHandler;
 import io.milton.http.DefaultRequestHostService;
+import io.milton.http.ExistingEntityFilter;
 import io.milton.http.Filter;
 import io.milton.http.HandlerHelper;
 import io.milton.http.HttpExtension;
@@ -169,6 +170,7 @@ public class HttpManagerBuilder {
 	protected List<AuthenticationHandler> cookieDelegateHandlers;
 	protected DigestAuthenticationHandler digestHandler;
 	protected RequestHostService requestHostService;
+	protected ExistingEntityFilter existingEntityFilter;
 	protected BasicAuthHandler basicHandler;
 	protected CookieAuthenticationHandler cookieAuthenticationHandler;
 	protected FormAuthenticationHandler formAuthenticationHandler;
@@ -509,7 +511,7 @@ public class HttpManagerBuilder {
 		}
 		handlerHelper.setEnableExpectContinue(enableExpectContinue);
 		if (resourceHandlerHelper == null) {
-			resourceHandlerHelper = new ResourceHandlerHelper(handlerHelper, urlAdapter, webdavResponseHandler, authenticationService, requestHostService);
+			resourceHandlerHelper = new ResourceHandlerHelper(handlerHelper, urlAdapter, webdavResponseHandler, authenticationService, requestHostService, existingEntityFilter);
 			showLog("resourceHandlerHelper", resourceHandlerHelper);
 		}
 		// Build stack of resource factories before protocols, because protocols use (so depend on)
@@ -1099,6 +1101,14 @@ public class HttpManagerBuilder {
 
 	public void setRequestHostService(RequestHostService requestHostService) {
 		this.requestHostService = requestHostService;
+	}
+
+	public ExistingEntityFilter getExistingEntityFilter() {
+		return existingEntityFilter;
+	}
+
+	public void setExistingEntityFilter(ExistingEntityFilter existingEntityFilter) {
+		this.existingEntityFilter = existingEntityFilter;
 	}
 
 	public OAuth2AuthenticationHandler getOAuth2Handler() {

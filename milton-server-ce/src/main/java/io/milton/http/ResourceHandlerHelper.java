@@ -52,8 +52,8 @@ public class ResourceHandlerHelper {
 	public static final String ATT_NAME_FILES = "_files";
 
 	public static void parseRequestParams(Request request) {
-		if( request.getAttributes().containsKey(ATT_NAME_PARAMS)) {
-			return ;
+		if (request.getAttributes().containsKey(ATT_NAME_PARAMS)) {
+			return;
 		}
 		Map<String, String> params = new LinkedHashMap<>();
 
@@ -77,12 +77,13 @@ public class ResourceHandlerHelper {
 	private final UrlAdapter urlAdapter;
 	private final AuthenticationService authenticationService;
 	private final RequestHostService requestHostService;
+	private final ExistingEntityFilter existingEntityFilter;
 
-	public ResourceHandlerHelper(HandlerHelper handlerHelper, UrlAdapter urlAdapter, Http11ResponseHandler responseHandler, AuthenticationService authenticationService, RequestHostService requestHostService) {
+	public ResourceHandlerHelper(HandlerHelper handlerHelper, UrlAdapter urlAdapter, Http11ResponseHandler responseHandler, AuthenticationService authenticationService, RequestHostService requestHostService, ExistingEntityFilter existingEntityFilter) {
 		if (handlerHelper == null) {
 			throw new IllegalArgumentException("handlerHelper may not be null");
 		}
-		if( requestHostService == null ) {
+		if (requestHostService == null) {
 			throw new IllegalArgumentException("requestHostService may not be null");
 		}
 		this.requestHostService = requestHostService;
@@ -90,6 +91,7 @@ public class ResourceHandlerHelper {
 		this.urlAdapter = urlAdapter;
 		this.handlerHelper = handlerHelper;
 		this.authenticationService = authenticationService;
+		this.existingEntityFilter = existingEntityFilter;
 	}
 
 	public void process(HttpManager manager, Request request, Response response, ResourceHandler handler) throws NotAuthorizedException, ConflictException, BadRequestException {
@@ -204,7 +206,11 @@ public class ResourceHandlerHelper {
 				}
 			}
 			try {
-				handler.processExistingResource(manager, request, response, resource);
+				if (existingEntityFilter != null) {
+					existingEntityFilter.processExistingResource(handler, manager, request, response, resource);
+				} else {
+					handler.processExistingResource(manager, request, response, resource);
+				}
 			} catch (NotFoundException ex) {
 				log.warn("Not found exception thrown from handler: " + handler.getClass(), ex);
 				responseHandler.respondNotFound(response, request);
