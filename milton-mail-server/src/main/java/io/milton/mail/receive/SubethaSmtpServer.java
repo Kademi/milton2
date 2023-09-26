@@ -18,9 +18,9 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subethamail.smtp.MessageHandlerFactory;
 import org.subethamail.smtp.MessageListener;
 import org.subethamail.smtp.TooMuchDataException;
-import org.subethamail.smtp.server.CommandHandler;
 import org.subethamail.smtp.server.MessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
 
@@ -33,6 +33,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     protected final boolean enableTls;
     protected final MailResourceFactory resourceFactory;
     protected final List<Filter> filters;
+    protected final MiltonMessageHandlerFactory messageHandlerFactory;
 
     public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
         if (resourceFactory == null) {
@@ -42,6 +43,18 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         this.enableTls = enableTls;
         this.resourceFactory = resourceFactory;
         this.filters = filters;
+        this.messageHandlerFactory = null;
+    }
+
+    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters, MiltonMessageHandlerFactory messageHandlerFactory) {
+        if (resourceFactory == null) {
+            throw new RuntimeException("Configuration problem. resourceFactory cannot be null");
+        }
+        this.smtpPort = smtpPort;
+        this.enableTls = enableTls;
+        this.resourceFactory = resourceFactory;
+        this.filters = filters;
+        this.messageHandlerFactory = messageHandlerFactory;
     }
 
     public SubethaSmtpServer(MailResourceFactory resourceFactory, List<Filter> filters) {
@@ -83,24 +96,43 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         Collection<MessageListener> listeners = new ArrayList<>(1);
         listeners.add(this);
 
+        if (this.messageHandlerFactory != null) {
+            this.messageHandlerFactory.setListeners(listeners);
+        }
+
         if (enableTls) {
             log.info("Creating TLS enabled server");
-            this.smtpReceivingServer = new SMTPServer(listeners);
+            if (this.messageHandlerFactory != null) {
+                this.smtpReceivingServer = new SMTPServer(this.messageHandlerFactory);
+            } else {
+                this.smtpReceivingServer = new SMTPServer(listeners);
+            }
         } else {
             log.info("Creating TLS DIS-abled server");
-            this.smtpReceivingServer = new TlsDisabledSmtpServer(listeners);
+            if (this.messageHandlerFactory != null) {
+                this.smtpReceivingServer = new TlsDisabledSmtpServer(this.messageHandlerFactory);
+            } else {
+                this.smtpReceivingServer = new TlsDisabledSmtpServer(listeners);
+            }
         }
         this.smtpReceivingServer.setPort(smtpPort);
         this.smtpReceivingServer.setMaxConnections(30000);
-        CommandHandler cmdHandler = this.smtpReceivingServer.getCommandHandler();
 
-        MessageListenerAdapter mla = (MessageListenerAdapter) smtpReceivingServer.getMessageHandlerFactory();
-        mla.setAuthenticationHandlerFactory(null);
+        MessageHandlerFactory mhf = smtpReceivingServer.getMessageHandlerFactory();
+        if (mhf instanceof MessageListenerAdapter) {
+            MessageListenerAdapter mla = (MessageListenerAdapter) mhf;
+            mla.setAuthenticationHandlerFactory(null);
+        } else if (mhf instanceof MiltonMessageHandlerFactory) {
+            MiltonMessageHandlerFactory mmhf = (MiltonMessageHandlerFactory) mhf;
+            mmhf.setAuthenticationHandlerFactory(null);
+        }
     }
 
     /**
      * Subetha.MessageListener
      *
+     * @param sFrom
+     * @param sRecipient
      */
     @Override
     public boolean accept(String sFrom, String sRecipient) {
@@ -131,6 +163,9 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
      * Subetha MessageListener. Called when an SMTP message has bee received.
      * Could be a send request from our domain or an email to our domain
      *
+     * @param sFrom
+     * @param sRecipient
+     * @param data
      */
     @Override
     public void deliver(String sFrom, String sRecipient, final InputStream data) throws TooMuchDataException, IOException {

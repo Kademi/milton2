@@ -19,6 +19,7 @@
 package io.milton.mail;
 
 import io.milton.mail.receive.AuthenticatedSmtpServer;
+import io.milton.mail.receive.MiltonMessageHandlerFactory;
 import io.milton.mail.receive.SmtpServer;
 import io.milton.mail.receive.SubethaSmtpServer;
 import io.milton.mail.send.AspirinMailSender;
@@ -58,6 +59,7 @@ public class MailServerBuilder {
     private int msaSmtpPort = 587;
     private boolean enableSmtpTls = false;
     private boolean enableMsaSmtpTls = false;
+    private MiltonMessageHandlerFactory messageHandlerFactory = null;
 
     /**
      * Builds the MailServer from supplied options, but does not start it.
@@ -81,11 +83,11 @@ public class MailServerBuilder {
                 if (mailStore == null) {
                     mailStore = new FileMailStore(aspirinConfiguration);
                 }
-                if( deliveryManager == null ) {
+                if (deliveryManager == null) {
                     deliveryManager = new DeliveryManager(aspirinConfiguration, queueStore, mailStore);
                 }
                 listenerManager.setDeliveryManager(deliveryManager);
-                if( aspirinInternal == null ) {
+                if (aspirinInternal == null) {
                     aspirinInternal = new AspirinInternal(aspirinConfiguration, deliveryManager, listenerManager);
                 }
                 mailSender = new AspirinMailSender(aspirinInternal, deliveryManager, listenerManager);
@@ -93,7 +95,7 @@ public class MailServerBuilder {
         }
         if (smtpServer == null) {
             if (enableSmtp) {
-                smtpServer = new SubethaSmtpServer(smtpPort, enableSmtpTls, mailResourceFactory, filters);
+                smtpServer = new SubethaSmtpServer(smtpPort, enableSmtpTls, mailResourceFactory, filters, messageHandlerFactory);
             }
         }
         if (msaSmtpServer == null) {
@@ -256,5 +258,12 @@ public class MailServerBuilder {
         this.deliveryManager = deliveryManager;
     }
 
+    public MiltonMessageHandlerFactory getMessageHandlerFactory() {
+        return messageHandlerFactory;
+    }
+
+    public void setMessageHandlerFactory(MiltonMessageHandlerFactory messageHandlerFactory) {
+        this.messageHandlerFactory = messageHandlerFactory;
+    }
 
 }
