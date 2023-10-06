@@ -35,6 +35,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     protected final List<Filter> filters;
     protected final MiltonMessageHandlerFactory messageHandlerFactory;
 
+    private String hostname;
+
     public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
         if (resourceFactory == null) {
             throw new RuntimeException("Configuration problem. resourceFactory cannot be null");
@@ -126,6 +128,10 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
             MiltonMessageHandlerFactory mmhf = (MiltonMessageHandlerFactory) mhf;
             mmhf.setAuthenticationHandlerFactory(null);
         }
+
+        if (hostname != null) {
+            this.smtpReceivingServer.setHostName(hostname);
+        }
     }
 
     /**
@@ -172,20 +178,15 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         log.debug("deliver email from: " + sFrom + " to: " + sRecipient);
         log.debug("email from: " + sFrom + " to: " + sRecipient);
         final DeliverEvent event = new DeliverEvent(sFrom, sRecipient, data);
-        Filter terminal = new Filter() {
+        Filter terminal = (FilterChain chain, Event e) -> {
+            MailboxAddress from = MailboxAddress.parse(event.getFrom());
+            MailboxAddress recip = MailboxAddress.parse(event.getRecipient());
 
-            @Override
-            public void doEvent(FilterChain chain, Event e) {
-                MailboxAddress from = MailboxAddress.parse(event.getFrom());
-                MailboxAddress recip = MailboxAddress.parse(event.getRecipient());
+            MimeMessage mm = parseInput(data);
 
-                MimeMessage mm = parseInput(data);
-
-                Mailbox recipMailbox = resourceFactory.getMailbox(recip);
-                log.debug("recipient is known to us, so store: " + recip);
-                storeMail(recipMailbox, mm);
-
-            }
+            Mailbox recipMailbox = resourceFactory.getMailbox(recip);
+            log.debug("recipient is known to us, so store: " + recip);
+            storeMail(recipMailbox, mm);
         };
         FilterChain chain = new FilterChain(filters, terminal);
         chain.doEvent(event);
@@ -226,6 +227,15 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
     public MailResourceFactory getResourceFactory() {
         return resourceFactory;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    @Override
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
     }
 
 }

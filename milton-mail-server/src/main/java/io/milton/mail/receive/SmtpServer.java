@@ -11,4 +11,6 @@ public interface SmtpServer {
     void stop();
 
     int getSmtpPort();
+    
+    void setHostname(String hostname);
 }

@@ -3,7 +3,9 @@
         <action>
             <actionName>CUSTOM-deploy</actionName>
             <displayName>deploy</displayName>
+			<preAction>build-with-dependencies</preAction>
             <goals>
+				<goal>clean</goal>
                 <goal>deploy</goal>
             </goals>
         </action>

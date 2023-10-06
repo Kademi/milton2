@@ -59,6 +59,7 @@ public class MailServerBuilder {
     private int msaSmtpPort = 587;
     private boolean enableSmtpTls = false;
     private boolean enableMsaSmtpTls = false;
+    private String smtpHostname = null;
     private MiltonMessageHandlerFactory messageHandlerFactory = null;
 
     /**
@@ -96,6 +97,7 @@ public class MailServerBuilder {
         if (smtpServer == null) {
             if (enableSmtp) {
                 smtpServer = new SubethaSmtpServer(smtpPort, enableSmtpTls, mailResourceFactory, filters, messageHandlerFactory);
+                smtpServer.setHostname(smtpHostname);
             }
         }
         if (msaSmtpServer == null) {
@@ -216,6 +218,14 @@ public class MailServerBuilder {
 
     public void setEnableMsaSmtpTls(boolean enableMsaSmtpTls) {
         this.enableMsaSmtpTls = enableMsaSmtpTls;
+    }
+
+    public String getSmtpHostname() {
+        return smtpHostname;
+    }
+
+    public void setSmtpHostname(String smtpHostname) {
+        this.smtpHostname = smtpHostname;
     }
 
     public MailStore getMailStore() {
