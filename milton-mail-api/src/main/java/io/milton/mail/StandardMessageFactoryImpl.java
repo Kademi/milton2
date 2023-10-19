@@ -509,7 +509,17 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             mm.setDisposition(sm.getDisposition());
             fillContentLanguage(sm.getContentLanguage(), mm);
             fillContent(sm, mm);
-            // todo: set headers?
+
+            // Fill in headers
+            Map<String, String> headers = sm.getHeaders();
+            if (headers != null && !headers.isEmpty()) {
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    String key = entry.getKey();
+                    String val = entry.getValue();
+                    mm.setHeader(key, val);
+                }
+            }
+            
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
