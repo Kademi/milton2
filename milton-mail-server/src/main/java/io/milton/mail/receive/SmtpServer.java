@@ -13,4 +13,6 @@ public interface SmtpServer {
     int getSmtpPort();
     
     void setHostname(String hostname);
+    
+    void setEnableProxyProtocolV2(Boolean proxyProtocolV2Enabled);
 }

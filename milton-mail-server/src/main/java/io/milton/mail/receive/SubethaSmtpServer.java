@@ -36,6 +36,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     protected final MiltonMessageHandlerFactory messageHandlerFactory;
 
     private String hostname;
+    private Boolean enableProxyProtocolV2;
 
     public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
         if (resourceFactory == null) {
@@ -131,6 +132,10 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
         if (hostname != null) {
             this.smtpReceivingServer.setHostName(hostname);
+        }
+
+        if (enableProxyProtocolV2 != null) {
+            this.smtpReceivingServer.setEnableProxyProtocolV2(enableProxyProtocolV2);
         }
     }
 
@@ -236,6 +241,14 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     @Override
     public void setHostname(String hostname) {
         this.hostname = hostname;
+    }
+
+    public Boolean getEnableProxyProtocolV2() {
+        return enableProxyProtocolV2;
+    }
+
+    public void setEnableProxyProtocolV2(Boolean enableProxyProtocolV2) {
+        this.enableProxyProtocolV2 = enableProxyProtocolV2;
     }
 
 }

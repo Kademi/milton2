@@ -60,6 +60,7 @@ public class MailServerBuilder {
     private boolean enableSmtpTls = false;
     private boolean enableMsaSmtpTls = false;
     private String smtpHostname = null;
+    private Boolean enableProxyProtocolV2;
     private MiltonMessageHandlerFactory messageHandlerFactory = null;
 
     /**
@@ -98,6 +99,10 @@ public class MailServerBuilder {
             if (enableSmtp) {
                 smtpServer = new SubethaSmtpServer(smtpPort, enableSmtpTls, mailResourceFactory, filters, messageHandlerFactory);
                 smtpServer.setHostname(smtpHostname);
+
+                if (enableProxyProtocolV2 != null) {
+                    smtpServer.setEnableProxyProtocolV2(enableProxyProtocolV2);
+                }
             }
         }
         if (msaSmtpServer == null) {
@@ -226,6 +231,14 @@ public class MailServerBuilder {
 
     public void setSmtpHostname(String smtpHostname) {
         this.smtpHostname = smtpHostname;
+    }
+
+    public Boolean getEnableProxyProtocolV2() {
+        return enableProxyProtocolV2;
+    }
+
+    public void setEnableProxyProtocolV2(Boolean enableProxyProtocolV2) {
+        this.enableProxyProtocolV2 = enableProxyProtocolV2;
     }
 
     public MailStore getMailStore() {
