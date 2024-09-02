@@ -127,7 +127,8 @@ public interface Response {
         SC_UNPROCESSABLE_ENTITY( 418 ),
         SC_INSUFFICIENT_STORAGE( 507 ),
         SC_METHOD_FAILURE( 420 ),
-        SC_LOCKED( 423 );
+        SC_LOCKED( 423 ),
+        SC_TOO_MANY_REQUESTS(429, "Too Many Requests");
         public int code;
 		public String text;
 

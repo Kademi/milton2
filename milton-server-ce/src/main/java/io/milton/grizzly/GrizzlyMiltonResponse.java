@@ -1,5 +1,4 @@
 //Copyright Kademi 2015
-
 package io.milton.grizzly;
 
 import io.milton.http.AbstractResponse;
@@ -11,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.glassfish.grizzly.http.server.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,67 +21,69 @@ import org.slf4j.LoggerFactory;
  */
 public class GrizzlyMiltonResponse extends AbstractResponse {
 
-    private static final Logger log = LoggerFactory.getLogger(GrizzlyMiltonResponse.class);
+	private static final Logger log = LoggerFactory.getLogger(GrizzlyMiltonResponse.class);
 
-    private final Response r;
-    private final Map<String, String> headers = new HashMap<>();
+	private final Response r;
+	private final Map<String, String> headers = new HashMap<>();
 
-    public GrizzlyMiltonResponse(Response response) {
-        this.r = response;
-    }
+	public GrizzlyMiltonResponse(Response response) {
+		this.r = response;
+	}
 
+	@Override
+	public Status getStatus() {
+		return Status.fromCode(r.getStatus());
+	}
 
+	@Override
+	public Map<String, String> getHeaders() {
+		return Collections.unmodifiableMap(headers);
+	}
 
-    @Override
-    public Status getStatus() {
-        return Status.fromCode(r.getStatus());
-    }
-
-    @Override
-    public Map<String, String> getHeaders() {
-        return Collections.unmodifiableMap(headers);
-    }
-
-    @Override
-    public void setAuthenticateHeader(List<String> challenges) {
+	@Override
+	public void setAuthenticateHeader(List<String> challenges) {
 		for (String ch : challenges) {
 			r.addHeader(io.milton.http.Response.Header.WWW_AUTHENTICATE.code, ch);
 		}
-    }
+	}
 
-    @Override
-    public void setStatus(Status status) {
-        r.setStatus(status.code);
-    }
+	@Override
+	public void setStatus(Status status) {
+		if (StringUtils.isNotBlank(status.text)) {
+			r.setStatus(status.code, status.text);
+		} else {
+			r.setStatus(status.code);
+		}
+	}
 
-    @Override
-    public void setNonStandardHeader(String code, String value) {
+	@Override
+	public void setNonStandardHeader(String code, String value) {
 		r.addHeader(code, value);
 		headers.put(code, value);
-    }
+	}
 
-    @Override
-    public String getNonStandardHeader(String code) {
-        return headers.get(code);
-    }
+	@Override
+	public String getNonStandardHeader(String code) {
+		return headers.get(code);
+	}
 
-    @Override
-    public OutputStream getOutputStream() {
+	@Override
+	public OutputStream getOutputStream() {
 
-			return r.getOutputStream();
+		return r.getOutputStream();
 
-    }
+	}
 
-    @Override
-    public void close() {
-    }
+	@Override
+	public void close() {
+	}
 
-    @Override
-    public void sendError(Status status, String message) {
+	@Override
+	public void sendError(Status status, String message) {
 		try {
 			r.sendError(status.code, message);
-        }catch(java.lang.IllegalStateException e) {
-            log.error("Failed to send error, response already commited", e.getMessage());
+		} catch (java.lang.IllegalStateException e) {
+			log.error("Failed to send error, response already commited", e.getMessage());
 		} catch (IOException ex) {
 			log.error("Failed to send error", ex);
 		}
@@ -91,8 +93,7 @@ public class GrizzlyMiltonResponse extends AbstractResponse {
 		} catch (Throwable e) {
 			log.warn("Failed to close outputstream after sendError");
 		}
-    }
-
+	}
 
 	@Override
 	public Cookie setCookie(Cookie cookie) {
