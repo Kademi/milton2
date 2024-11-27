@@ -19,6 +19,7 @@
 
 package io.milton.http.http11;
 
+import io.milton.event.OptionsEvent;
 import io.milton.http.HttpManager;
 import io.milton.resource.Resource;
 import io.milton.http.Response;
@@ -89,6 +90,8 @@ public class OptionsHandler implements ResourceHandler {
 
             manager.onProcessResourceStart( request, response, resource );
 
+			manager.getEventManager().fireEvent(new OptionsEvent(resource));
+			
             List<String> methodsAllowed = determineMethodsAllowed( manager, resource );
             responseHandler.respondWithOptions( resource, response, request, methodsAllowed );
 
