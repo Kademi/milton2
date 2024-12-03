@@ -50,33 +50,25 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 import org.apache.http.auth.*;
 import org.apache.http.client.*;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.conn.routing.HttpRoutePlanner;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.*;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -107,7 +99,7 @@ public class Host extends Folder {
             + "<D:locktype><D:write/></D:locktype>"
             + "<D:owner>${owner}</D:owner>"
             + "</D:lockinfo>";
-    private static final Set<String> WEBDAV_REDIRECTABLE = new HashSet<String>(Arrays.asList(new String[]{"PROPFIND", "LOCK", "UNLOCK", "DELETE"}));
+    private static final Set<String> WEBDAV_REDIRECTABLE = new HashSet<>(Arrays.asList(new String[]{"PROPFIND", "LOCK", "UNLOCK", "DELETE"}));
     private static final Logger log = LoggerFactory.getLogger(Host.class);
     public final String server;
     public final Integer port;
@@ -118,14 +110,14 @@ public class Host extends Folder {
      * time in milliseconds to be used for all timeout parameters
      */
     private int timeout;
-    private final DefaultHttpClient client;
+    private final HttpClient client;
     private final TransferService transferService;
     private final FileSyncer fileSyncer;
-    private final List<ConnectionListener> connectionListeners = new ArrayList<ConnectionListener>();
+    private final List<ConnectionListener> connectionListeners = new ArrayList<>();
     private boolean secure; // use HTTPS if true
     private boolean usePreemptiveAuth = true;
     private boolean useDigestForPreemptiveAuth = true; // if true we will do pre-emptive auth with Digest, otherwise will use Basic
-    private Map<String, String> cookies = new HashMap<String, String>();
+    private Map<String, String> cookies = new HashMap<>();
 
     static {
 //    System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
@@ -186,54 +178,57 @@ public class Host extends Folder {
         this.port = port;
         this.user = user;
         this.password = password;
-        HttpParams params = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(params, timeoutMillis);
-        HttpConnectionParams.setSoTimeout(params, timeoutMillis);
-        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-
-        // Create and initialize scheme registry
-        SchemeRegistry schemeRegistry = new SchemeRegistry();
-        schemeRegistry.register(new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
-        schemeRegistry.register(new Scheme("https", 443, SSLSocketFactory.getSocketFactory()));
 
         // Create an HttpClient with the ThreadSafeClientConnManager.
         // This connection manager must be used if more than one thread will
         // be using the HttpClient.
-        ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(schemeRegistry);
-        cm.setMaxTotal(200);
+        PoolingHttpClientConnectionManager phccm = new PoolingHttpClientConnectionManager();
+        phccm.setMaxTotal(200);
+        phccm.setDefaultMaxPerRoute(200);
 
-        client = new MyDefaultHttpClient(cm, params);
+        // client = new MyDefaultHttpClient(cm, params);
         HttpRequestRetryHandler handler = new NoRetryHttpRequestRetryHandler();
-        client.setHttpRequestRetryHandler(handler);
-        client.setRedirectStrategy(new DefaultRedirectStrategy() {
-            @Override
-            public boolean isRedirected(
-                    final HttpRequest request,
-                    final HttpResponse response,
-                    final HttpContext context) throws ProtocolException {
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
-                if (super.isRedirected(request, response, context)) {
-                    return true;
-                }
-                int statusCode = response.getStatusLine().getStatusCode();
-                String method = request.getRequestLine().getMethod();
-                Header locationHeader = response.getFirstHeader("location");
-                switch (statusCode) {
-                    case HttpStatus.SC_MOVED_TEMPORARILY:
-                        return locationHeader != null && WEBDAV_REDIRECTABLE.contains(method);
-                    case HttpStatus.SC_MOVED_PERMANENTLY:
-                    case HttpStatus.SC_TEMPORARY_REDIRECT:
-                        return WEBDAV_REDIRECTABLE.contains(method);
-                    default:
-                        return false;
-                }
-            }
-        });
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.copy(RequestConfig.DEFAULT)
+                .setCookieSpec(CookieSpecs.STANDARD)
+                .setConnectTimeout(timeoutMillis)
+                .setSocketTimeout(timeoutMillis);
+
+        HttpClientBuilder builder = HttpClients.custom()
+                .setRetryHandler(handler)
+                .setDefaultCredentialsProvider(credentialsProvider)
+                .setConnectionManager(phccm)
+                .setConnectionManagerShared(true)
+                .setRedirectStrategy(new DefaultRedirectStrategy() {
+                    @Override
+                    public boolean isRedirected(
+                            final HttpRequest request,
+                            final HttpResponse response,
+                            final HttpContext context) throws ProtocolException {
+
+                        if (super.isRedirected(request, response, context)) {
+                            return true;
+                        }
+                        int statusCode = response.getStatusLine().getStatusCode();
+                        String method = request.getRequestLine().getMethod();
+                        Header locationHeader = response.getFirstHeader("location");
+                        switch (statusCode) {
+                            case HttpStatus.SC_MOVED_TEMPORARILY:
+                                return locationHeader != null && WEBDAV_REDIRECTABLE.contains(method);
+                            case HttpStatus.SC_MOVED_PERMANENTLY:
+                            case HttpStatus.SC_TEMPORARY_REDIRECT:
+                                return WEBDAV_REDIRECTABLE.contains(method);
+                            default:
+                                return false;
+                        }
+                    }
+                });
 
         if (user != null) {
-            client.getCredentialsProvider().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
             PreemptiveAuthInterceptor interceptor = new PreemptiveAuthInterceptor();
-            client.addRequestInterceptor(interceptor, 0);
+            builder.addInterceptorFirst(interceptor);
         }
 
         if (proxyDetails != null) {
@@ -243,15 +238,19 @@ public class Host extends Folder {
                 System.setProperty("java.net.useSystemProxies", "false");
                 if (proxyDetails.getProxyHost() != null && proxyDetails.getProxyHost().length() > 0) {
                     HttpHost proxy = new HttpHost(proxyDetails.getProxyHost(), proxyDetails.getProxyPort(), "http");
-                    client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+                    requestConfigBuilder.setProxy(proxy);
                     if (proxyDetails.hasAuth()) {
-                        client.getCredentialsProvider().setCredentials(
+                        credentialsProvider.setCredentials(
                                 new AuthScope(proxyDetails.getProxyHost(), proxyDetails.getProxyPort()),
                                 new UsernamePasswordCredentials(proxyDetails.getUserName(), proxyDetails.getPassword()));
                     }
                 }
             }
         }
+
+        builder.setDefaultRequestConfig(requestConfigBuilder.build());
+        client = builder.build();
+
         transferService = new TransferService(client, connectionListeners);
         transferService.setTimeout(timeoutMillis);
         this.fileSyncer = fileSyncer;
@@ -1237,24 +1236,6 @@ public class Host extends Folder {
         @Override
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
             return false;
-        }
-    }
-
-    static class MyDefaultHttpClient extends DefaultHttpClient {
-
-        public MyDefaultHttpClient(ClientConnectionManager cm, HttpParams params) {
-            super(cm, params);
-        }
-
-        @Override
-        protected HttpRequestRetryHandler createHttpRequestRetryHandler() {
-            return new NoRetryHttpRequestRetryHandler();
-        }
-
-        @Override
-        protected RequestDirector createClientRequestDirector(HttpRequestExecutor requestExec, ClientConnectionManager conman, ConnectionReuseStrategy reustrat, ConnectionKeepAliveStrategy kastrat, HttpRoutePlanner rouplan, HttpProcessor httpProcessor, HttpRequestRetryHandler retryHandler, RedirectStrategy redirectStrategy, AuthenticationHandler targetAuthHandler, AuthenticationHandler proxyAuthHandler, UserTokenHandler stateHandler, HttpParams params) {
-            RequestDirector rd = super.createClientRequestDirector(requestExec, conman, reustrat, kastrat, rouplan, httpProcessor, retryHandler, redirectStrategy, targetAuthHandler, proxyAuthHandler, stateHandler, params);
-            return rd;
         }
     }
 }
