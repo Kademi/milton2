@@ -94,19 +94,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                 addAttachment(sm, bp);
             } else {
                 String ct = bp.getContentType();
-                if (ct.contains("html")) {
-                    if (sm.getHtml() == null) {
-                        sm.setHtml("");
-                    }
-                    String s = sm.getHtml() + getStringContent(bp);
-                    sm.setHtml(s);
-                } else if (ct.contains("text")) {
-                    if (sm.getText() == null) {
-                        sm.setText("");
-                    }
-                    String s = sm.getText() + getStringContent(bp);
-                    sm.setText(s);
-                } else if (ct.contains("multipart")) {
+                if (ct.contains("multipart")) {
                     Object subMessage = bp.getContent();
                     if (subMessage instanceof MimeMultipart) {
                         MimeMultipart child = (MimeMultipart) subMessage;
@@ -118,10 +106,23 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                             sm.getAttachedMessages().add(smSub);
                         }
                         populateMultiPart(child, smSub);
+                    } else if (subMessage == null) {
+                        log.warn("populateMultiPart :: subMessage is null for parent type {}", ct);
                     } else {
-                        log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 unknown sub message type");
+                        log.warn("populateMultiPart :: Unknown Type Parent: {} - {}", ct, subMessage.getClass().getSimpleName());
                     }
-
+                } else if (ct.contains("html")) {
+                    if (sm.getHtml() == null) {
+                        sm.setHtml("");
+                    }
+                    String s = sm.getHtml() + getStringContent(bp);
+                    sm.setHtml(s);
+                } else if (ct.contains("text")) {
+                    if (sm.getText() == null) {
+                        sm.setText("");
+                    }
+                    String s = sm.getText() + getStringContent(bp);
+                    sm.setText(s);
                 } else {
                     addAttachment(sm, bp);
                 }
@@ -335,7 +336,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             MimeMultipart related = new MimeMultipart("related");
             part.setContent(related);
             BodyPart bpHtml = new MimeBodyPart();
-            bpHtml.setHeader("Content-Type","text/plain; charset=\"utf-8\"");
+            bpHtml.setHeader("Content-Type", "text/plain; charset=\"utf-8\"");
             bpHtml.setContent(sm.getHtml(), "text/plain; charset=\"utf-8\"");
             related.addBodyPart(bpHtml);
             for (Attachment att : htmlInline) {
@@ -451,7 +452,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     String getStringContent(BodyPart bp) {
-        String text;
+        String text = "";
         try {
             Object o2 = bp.getContent();
             if (o2 == null) {
@@ -519,7 +520,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                     mm.setHeader(key, val);
                 }
             }
-            
+
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
