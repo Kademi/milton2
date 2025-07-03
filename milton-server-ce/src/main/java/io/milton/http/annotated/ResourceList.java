@@ -17,8 +17,8 @@
 package io.milton.http.annotated;
 
 import io.milton.resource.CollectionResource;
-import java.util.*;
 import io.milton.resource.Resource;
+import java.util.*;
 
 /**
  *
@@ -27,7 +27,7 @@ import io.milton.resource.Resource;
 public class ResourceList extends ArrayList<CommonResource> {
 
 	private static final long serialVersionUID = 1L;
-	private final Map<String, CommonResource> map = new HashMap<String, CommonResource>();
+	private final Map<String, CommonResource> map = new HashMap<>();
 
 	public ResourceList() {
 	}
@@ -42,24 +42,24 @@ public class ResourceList extends ArrayList<CommonResource> {
 
 	public ResourceList getDirs() {
 		ResourceList list = new ResourceList();
-		for( CommonResource cr : this ) {
-			if( cr instanceof CollectionResource) {
+		for (CommonResource cr : this) {
+			if (cr instanceof CollectionResource) {
 				list.add(cr);
 			}
 		}
-		return list;		
+		return list;
 	}
-	
+
 	public ResourceList getFiles() {
 		ResourceList list = new ResourceList();
-		for( CommonResource cr : this ) {
-			if( !(cr instanceof CollectionResource)) {
+		for (CommonResource cr : this) {
+			if (!(cr instanceof CollectionResource)) {
 				list.add(cr);
 			}
 		}
-		return list;		
-	}	
-	
+		return list;
+	}
+
 	@Override
 	public boolean add(CommonResource e) {
 		if (e == null) {
@@ -88,10 +88,10 @@ public class ResourceList extends ArrayList<CommonResource> {
 	public CommonResource get(String name) {
 		return map.get(name);
 	}
-	
-	public Resource remove(String name ) {
+
+	public Resource remove(String name) {
 		CommonResource r = map.remove(name);
-		if( r != null ) {
+		if (r != null) {
 			super.remove(r);
 		}
 		return r;
@@ -110,19 +110,21 @@ public class ResourceList extends ArrayList<CommonResource> {
 		return super.remove(o);
 	}
 
-	public Resource getFirst() {
+	@Override
+	public CommonResource getFirst() {
 		if (isEmpty()) {
 			return null;
 		}
 		return this.get(0);
 	}
 
-	public Resource getLast() {
-		if (this.size() > 0) {
-			return this.get(this.size() - 1);
-		} else {
+	@Override
+	public CommonResource getLast() {
+		if (isEmpty()) {
 			return null;
 		}
+
+		return this.get(this.size() - 1);
 	}
 
 	public Resource getRandom() {
@@ -131,7 +133,7 @@ public class ResourceList extends ArrayList<CommonResource> {
 			return null;
 		}
 
-		List<Resource> list = new ArrayList<Resource>();
+		List<Resource> list = new ArrayList<>();
 		for (Resource res : this) {
 			list.add(res);
 		}
@@ -295,9 +297,9 @@ public class ResourceList extends ArrayList<CommonResource> {
 
 	public ResourceList closest(String type) {
 		ResourceList l = new ResourceList();
-		for( CommonResource r : this) {
-			while( r != null ) {
-				if( r.is(type)) {
+		for (CommonResource r : this) {
+			while (r != null) {
+				if (r.is(type)) {
 					l.add(r);
 					break;
 				}
@@ -306,13 +308,11 @@ public class ResourceList extends ArrayList<CommonResource> {
 		}
 		return l;
 	}
-	
-    
-    public Map<String,CommonResource> getMap() {
-        return map;
-    }
-    	
-	
+
+	public Map<String, CommonResource> getMap() {
+		return map;
+	}
+
 //	public ResourceList find(String path, String type) {
 //		ResourceList l = new ResourceList();
 //		for( CommonResource r : this) {
@@ -322,5 +322,4 @@ public class ResourceList extends ArrayList<CommonResource> {
 //		}
 //		return l;
 //	}
-	
 }

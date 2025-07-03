@@ -23,8 +23,8 @@ public class GrizzlyMiltonResponse extends AbstractResponse {
 
 	private static final Logger log = LoggerFactory.getLogger(GrizzlyMiltonResponse.class);
 
-	private final Response r;
-	private final Map<String, String> headers = new HashMap<>();
+	protected final Response r;
+	protected final Map<String, String> headers = new HashMap<>();
 
 	public GrizzlyMiltonResponse(Response response) {
 		this.r = response;

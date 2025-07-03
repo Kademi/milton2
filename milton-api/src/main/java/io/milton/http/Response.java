@@ -128,6 +128,7 @@ public interface Response {
         SC_METHOD_FAILURE(420),
         SC_LOCKED(423),
         SC_TOO_MANY_REQUESTS(429, "Too Many Requests");
+
         public int code;
         public String text;
 
