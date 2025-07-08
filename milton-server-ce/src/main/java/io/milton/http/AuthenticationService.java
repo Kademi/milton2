@@ -18,9 +18,9 @@
  */
 package io.milton.http;
 
+import io.milton.common.StringUtils;
 import io.milton.resource.GetableResource;
 import io.milton.resource.Resource;
-import io.milton.common.StringUtils;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,6 +114,7 @@ public class AuthenticationService {
 						request.setAuthorization(auth);
 					}
 					auth.setTag(loginToken);
+					break;
 				}
 			} else {
 				if (log.isTraceEnabled()) {
