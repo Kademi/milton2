@@ -56,7 +56,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	private String userUrlAttName = "userUrl";
 	private boolean useLongLivedCookies = true;
 	private final List<String> keys;
-	private String keepLoggedInParamName = "keepLoggedIn";
+	private final String keepLoggedInParamName = "keepLoggedIn";
 
 	public CookieAuthenticationHandler(NonceProvider nonceProvider, List<AuthenticationHandler> handlers, ResourceFactory principalResourceFactory, List<String> keys, RequestHostService requestHostService) {
 		this.nonceProvider = nonceProvider;
@@ -93,7 +93,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 			}
 		}
 
-		List<AuthenticationHandler> supportingHandlers = new ArrayList<AuthenticationHandler>();
+		List<AuthenticationHandler> supportingHandlers = new ArrayList<>();
 		for (AuthenticationHandler hnd : handlers) {
 			if (hnd.supports(r, request)) {
 				log.info("Found child handler who supports this request {}", hnd);
@@ -167,10 +167,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 					try {
 						r = principalResourceFactory.getResource(host, userUrl);
 						log.trace("found current user: " + r);
-					} catch (NotAuthorizedException ex) {
-						log.error("Couldnt check userUrl in cookie", ex);
-						r = null;
-					} catch (BadRequestException ex) {
+					} catch (NotAuthorizedException | BadRequestException ex) {
 						log.error("Couldnt check userUrl in cookie", ex);
 						r = null;
 					}
@@ -294,6 +291,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	 * authenticity via a signing cookie
 	 *
 	 * @param request
+	 * @param r
 	 * @return
 	 */
 	public String getUserUrl(Request request, Resource r) {
@@ -493,13 +491,14 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 	 *
 	 * @param userUrl
 	 * @param request
+	 * @param r
 	 * @return
 	 */
 	public String getUrlSigningHash(String userUrl, Request request, Resource r) {
 		String host = requestHostService.getHostName(request);
 		return getUrlSigningHash(userUrl, request, host);
 	}
-	
+
 	public String getUrlSigningHash(String userUrl, Request request, String host) {
 		return getUrlSigningHash(userUrl, request, host, null);
 	}
@@ -518,7 +517,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		}
 		return signing;
 	}
-	
+
 	public String getLoginToken(String userUrl, Request request, Resource r) {
 		String host = requestHostService.getHostName(request);
 		return getLoginToken(userUrl, request, host);
