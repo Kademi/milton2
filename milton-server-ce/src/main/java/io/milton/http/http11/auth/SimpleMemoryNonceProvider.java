@@ -19,13 +19,11 @@
 package io.milton.http.http11.auth;
 
 import io.milton.http.Request;
-
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +87,7 @@ public class SimpleMemoryNonceProvider implements NonceProvider {
 	}
 
 	@Override
-	public String createNonce(Request request) {
+	public String createNonce(Request request, String reason) {
 		String n = createNonceObject(request).getValue().toString();
 		if (log.isTraceEnabled()) {
 			log.trace("Created nonce: " + n + " in map of size: " + nonces.size());

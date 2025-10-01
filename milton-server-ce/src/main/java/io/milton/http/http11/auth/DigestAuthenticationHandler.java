@@ -20,9 +20,9 @@ package io.milton.http.http11.auth;
 
 import io.milton.http.Auth;
 import io.milton.http.AuthenticationHandler;
-import io.milton.resource.DigestResource;
 import io.milton.http.Request;
 import io.milton.http.RequestHostService;
+import io.milton.resource.DigestResource;
 import io.milton.resource.Resource;
 import java.util.List;
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public class DigestAuthenticationHandler implements AuthenticationHandler {
 
 	@Override
 	public void appendChallenges(Resource resource, Request request, List<String> challenges) {
-		String nonceValue = nonceProvider.createNonce(request);
+		String nonceValue = nonceProvider.createNonce(request, null);
 		challenges.add(digestHelper.getChallenge(nonceValue, request.getAuthorization(), resource.getRealm()));
 	}
 

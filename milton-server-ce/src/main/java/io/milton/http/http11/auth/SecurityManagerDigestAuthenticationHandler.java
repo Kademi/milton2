@@ -23,8 +23,8 @@ import io.milton.http.Auth;
 import io.milton.http.AuthenticationHandler;
 import io.milton.http.Request;
 import io.milton.http.RequestHostService;
-import io.milton.resource.Resource;
 import io.milton.http.SecurityManager;
+import io.milton.resource.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,7 +89,7 @@ public class SecurityManagerDigestAuthenticationHandler implements Authenticatio
 
 	@Override
     public void appendChallenges( Resource resource, Request request, List<String> challenges ) {
-        String nonceValue = nonceProvider.createNonce( request );
+        String nonceValue = nonceProvider.createNonce( request, null);
         challenges.add( digestHelper.getChallenge(nonceValue, request.getAuthorization(), securityManager.getRealm(request.getHostHeader())) );
     }
 

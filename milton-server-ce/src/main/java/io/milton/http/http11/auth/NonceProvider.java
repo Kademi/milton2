@@ -89,21 +89,23 @@ public interface NonceProvider {
      *
      *
      * @param request - the current request
+	 * @param reason
      * @return - some string to be used as a nonce value.
      */
-    String createNonce( Request request );
+    String createNonce( Request request, String reason );
 
 	/**
 	 *
 	 * @param request
 	 * @param userUrl
+	 * @param reason
 	 * @return
 	 */
-	default String createNonce( Request request, String userUrl ) {
-		return createNonce(request);
+	default String createNonce( Request request, String userUrl, String reason ) {
+		return createNonce(request, reason);
 	}
 
-	default String createNonce( Request request, String userUrl, String host ) {
-		return createNonce(request);
+	default String createNonce( Request request, String userUrl, String host, String reason ) {
+		return createNonce(request, reason);
 	}
 }

@@ -499,9 +499,13 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		String host = requestHostService.getHostName(request);
 		return getUrlSigningHash(userUrl, request, host);
 	}
-
+	
 	public String getUrlSigningHash(String userUrl, Request request, String host) {
-		String nonce = nonceProvider.createNonce(request, userUrl, host);
+		return getUrlSigningHash(userUrl, request, host, null);
+	}
+
+	public String getUrlSigningHash(String userUrl, Request request, String host, String reason) {
+		String nonce = nonceProvider.createNonce(request, userUrl, host, reason);
 		String message = nonce + ":" + userUrl + ":" + host;
 		String key = keys.get(keys.size() - 1); // Use the last key for new cookies
 		String hash = HmacUtils.calcShaHash(message, key);
@@ -514,7 +518,7 @@ public class CookieAuthenticationHandler implements AuthenticationHandler {
 		}
 		return signing;
 	}
-
+	
 	public String getLoginToken(String userUrl, Request request, Resource r) {
 		String host = requestHostService.getHostName(request);
 		return getLoginToken(userUrl, request, host);
