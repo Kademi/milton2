@@ -181,6 +181,10 @@ public class PutHandler implements Handler {
 			}
 
 			CollectionResource parentCol = putHelper.findNearestParent(manager, host, path);
+			if (parentCol == null) {
+				responseHandler.respondConflict(null, response, request, "No parent collection for " + path);
+				return;
+			}
 			if (!handlerHelper.checkAuthorisation(manager, parentCol, request)) {
 				responseHandler.respondUnauthorised(parentCol, response, request);
 				return;
